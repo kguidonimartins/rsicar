@@ -85,17 +85,18 @@ sicar_resolve_municipality("araçoiaba/PE")
 #> "2601052"
 ```
 
-## 2 — Inventariar a integração com os downloads existentes
+## [x] 2 — Inventariar a integração com os downloads existentes
 
-- [ ] Confirmar a estrutura real dos ZIPs de cada tema do SICAR, incluindo
-  nomes de shapefiles, arquivos auxiliares, múltiplas camadas e convenções de
-  CRS.
+- [x] Confirmar a estrutura de entrada suportada pela função: um arquivo `.zip`
+  ou uma pasta contendo ZIPs; a inspeção dos shapefiles internos ficará na
+  tarefa de leitura espacial, porque o repositório não contém ZIPs reais do
+  SICAR.
 - [x] Mapear os caminhos produzidos por `sicar_download_state()` e
   `sicar_download_country()` (`dest_dir/<UF>/<UF>_<TEMA>.zip`) e aceitar tanto
   uma pasta de ZIPs quanto um ZIP avulso como origem.
-- [ ] Definir leitura segura em diretório temporário, sem alterar os ZIPs
+- [x] Definir leitura segura em diretório temporário, sem alterar os ZIPs
   originais e sem deixar arquivos extraídos no repositório ou em `R/`.
-- [ ] Reutilizar a validação existente de ZIP e distinguir erros de arquivo,
+- [x] Reutilizar a validação existente de ZIP e distinguir erros de arquivo,
   camada, leitura espacial e seleção vazia com condições `rsicar_*` úteis.
 
 ## 3 — Incorporar a malha municipal de referência
