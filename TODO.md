@@ -136,21 +136,21 @@ sicar_resolve_municipality("araçoiaba/PE")
   códigos duplicados; definir o comportamento de `strict = FALSE`.
 - [x] Documentar e exportar a função, com exemplos totalmente offline.
 
-## 5 — Implementar a seleção espacial da AOI
+## [x] 5 — Implementar a seleção espacial da AOI
 
-- [ ] Resolver os municípios e extrair suas geometrias da malha de 2025.
-- [ ] Ler as feições dos ZIPs selecionados como `sf`, preservando todos os
+- [x] Resolver os municípios e extrair suas geometrias da malha de 2025.
+- [x] Ler as feições dos ZIPs selecionados como `sf`, preservando todos os
   atributos e a geometria original do SICAR.
-- [ ] Validar CRS em ambos os objetos e transformar a malha municipal para o
+- [x] Validar CRS em ambos os objetos e transformar a malha municipal para o
   CRS das feições do SICAR quando necessário, sem desativar a validação
   espacial do `sf`.
-- [ ] Calcular a relação espacial exclusivamente com `sf::st_intersects()`;
+- [x] Calcular a relação espacial exclusivamente com `sf::st_intersects()`;
   converter os índices retornados em uma seleção de linhas e nunca chamar
   `sf::st_intersection()`.
-- [ ] Deduplicar feições quando elas tocarem mais de um município, mantendo
+- [x] Deduplicar feições quando elas tocarem mais de um município, mantendo
   uma linha por feição original, e definir como registrar a associação com
   vários municípios caso esse metadado seja incluído.
-- [ ] Definir tratamento explícito para feições inválidas, geometrias vazias,
+- [x] Definir tratamento explícito para feições inválidas, geometrias vazias,
   CRS ausente, resultado sem feições e diferenças de precisão entre limites.
 
 ## 6 — Retornar as geometrias selecionadas
