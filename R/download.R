@@ -60,7 +60,7 @@
 .sicar_download_zip <- function(client, url, path) {
   response <- tryCatch(
     httr2::req_perform(
-      .sicar_request(client, url),
+      .sicar_request(client, url) |> httr2::req_progress("down"),
       path = path
     ),
     error = function(error) {
@@ -164,8 +164,24 @@
     return(normalizePath(final_path, mustWork = TRUE))
   }
 
+  # Most attempts are just a rejected CAPTCHA guess, not a stalled network
+  # transfer, so there is nothing for `.sicar_download_zip()`'s own
+  # byte-level progress bar to show yet. Surface attempt-level progress here
+  # so the console does not go silent for the seconds (or, with a low CAPTCHA
+  # solve rate, minutes) it can take across `tries` attempts.
+  progress_id <- cli::cli_progress_bar(
+    format = paste0(
+      "{state}/{polygon}: tentativa {cli::pb_current}/{cli::pb_total} ",
+      "{cli::pb_bar} {cli::pb_percent} | eta: {cli::pb_eta}"
+    ),
+    total = as.integer(tries),
+    clear = TRUE
+  )
+  on.exit(cli::cli_progress_done(id = progress_id), add = TRUE)
+
   last_error <- NULL
   for (attempt in seq_len(as.integer(tries))) {
+    cli::cli_progress_update(id = progress_id, set = attempt)
     result <- tryCatch(
       attempt_download(client, state, polygon, dest_dir),
       error = function(error) {
@@ -219,7 +235,9 @@
 #'   within a couple of seconds, so a solver well under 100% accuracy (such
 #'   as `sicar_solver_tesseract()`) still needs a generous budget to
 #'   automatically land a correct answer; this matches the default used by
-#'   the upstream Python client.
+#'   the upstream Python client. In an interactive session, progress across
+#'   attempts (and, once a CAPTCHA is solved, the ZIP transfer itself) is
+#'   shown on the console with a progress bar and an ETA.
 #' @param wait Internal sleep function used between retry attempts.
 #' @param random Internal jitter function used to calculate retry delays.
 #' @param attempt_download Internal dependency-injection hook.

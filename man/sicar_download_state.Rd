@@ -33,7 +33,9 @@ are just a wrong CAPTCHA guess or an expired session, both retried
 within a couple of seconds, so a solver well under 100\% accuracy (such
 as \code{sicar_solver_tesseract()}) still needs a generous budget to
 automatically land a correct answer; this matches the default used by
-the upstream Python client.}
+the upstream Python client. In an interactive session, progress across
+attempts (and, once a CAPTCHA is solved, the ZIP transfer itself) is
+shown on the console with a progress bar and an ETA.}
 
 \item{wait}{Internal sleep function used between retry attempts.}
 
