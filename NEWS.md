@@ -48,3 +48,8 @@
   requested polygon types are validated upfront, before any download starts;
   the result is a character vector of paths named by polygon type when more
   than one is requested.
+* Added console progress feedback to `sicar_download_state()` (and
+  therefore `sicar_download_country()`): an attempt counter with an ETA
+  while a CAPTCHA is being solved, and a byte-level progress bar with ETA
+  for the ZIP transfer once a CAPTCHA succeeds. Both are silent in
+  non-interactive sessions.
