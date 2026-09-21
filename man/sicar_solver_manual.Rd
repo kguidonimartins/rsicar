@@ -10,5 +10,10 @@ sicar_solver_manual()
 An object usable as the \code{solver} argument of \code{sicar_client()}.
 }
 \description{
-Create a manual CAPTCHA solver
+Prompts the user to type the CAPTCHA shown at the given image path.
+Requires an interactive session.
+}
+\examples{
+solver <- sicar_solver_manual()
+solver$name
 }

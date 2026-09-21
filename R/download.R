@@ -75,6 +75,10 @@
     }
   )
   .sicar_require_response(response, url, 200, "application/zip")
+  # `req_perform(path =)` streams the body straight to disk on a real
+  # transfer, but mocked responses (`httr2::local_mocked_responses()`) keep
+  # the body in memory only and never write `path`. This fallback covers
+  # that case and any other request that returns a body without streaming.
   if (!file.exists(path) || file.info(path)$size == 0) {
     writeBin(httr2::resp_body_raw(response), path)
   }
@@ -82,8 +86,23 @@
   invisible(path)
 }
 
+.sicar_forget_session_on_302 <- function(client, error) {
+  # A 302 mid-flow means the session cookies were not honored (typically an
+  # expired session). Clearing the bootstrapped flag makes the next retry's
+  # `.sicar_bootstrap()` call actually re-run instead of being a no-op, so
+  # the client recovers on its own instead of exhausting `tries` immediately.
+  if (identical(error$status, 302L) || identical(error$status, 302)) {
+    client$state$bootstrapped <- FALSE
+  }
+  stop(error)
+}
+
 .sicar_attempt_download <- function(client, state, polygon, dest_dir) {
-  captcha_path <- .sicar_download_captcha(client)
+  .sicar_bootstrap(client)
+  captcha_path <- tryCatch(
+    .sicar_download_captcha(client),
+    error = function(error) .sicar_forget_session_on_302(client, error)
+  )
   on.exit(unlink(captcha_path), add = TRUE)
   captcha <- .sicar_solve(client$solver, captcha_path)
   url <- .sicar_download_url(client, state, polygon, captcha)
@@ -94,7 +113,10 @@
   )
   success <- FALSE
   on.exit(if (!success) unlink(temporary), add = TRUE)
-  .sicar_download_zip(client, url, temporary)
+  tryCatch(
+    .sicar_download_zip(client, url, temporary),
+    error = function(error) .sicar_forget_session_on_302(client, error)
+  )
   success <- TRUE
   temporary
 }
@@ -120,6 +142,12 @@
 #' @param random Internal jitter function used to calculate retry delays.
 #' @param attempt_download Internal dependency-injection hook.
 #' @returns The normalized path of the downloaded ZIP archive.
+#' @examples
+#' \dontrun{
+#' client <- sicar_client(solver = sicar_solver_manual())
+#' sicar_download_state(client, "PA", "APPS", dest_dir = "SICAR/PA")
+#' }
+#' @importFrom stats runif
 #' @export
 sicar_download_state <- function(
   client,
@@ -211,15 +239,6 @@ sicar_download_state <- function(
     }
     wait(.sicar_retry_delay(attempt, random))
   }
-
-  .sicar_abort(
-    sprintf("Download failed after %d attempt(s).", tries),
-    "rsicar_download_error",
-    state = state,
-    polygon = polygon,
-    attempt = tries,
-    parent = last_error
-  )
 }
 
 #' Download one SICAR polygon archive for every Brazilian state
@@ -235,6 +254,11 @@ sicar_download_state <- function(
 #' @param random Internal jitter function used to calculate retry delays.
 #' @returns A data frame with one row per state and `path`, `status`, and
 #'   `error` columns.
+#' @examples
+#' \dontrun{
+#' client <- sicar_client(solver = sicar_solver_manual())
+#' sicar_download_country(client, "APPS", dest_dir = "SICAR")
+#' }
 #' @export
 sicar_download_country <- function(
   client,
@@ -246,6 +270,18 @@ sicar_download_country <- function(
   wait = Sys.sleep,
   random = function() runif(1)
 ) {
+  if (!inherits(client, "sicar_client")) {
+    .sicar_abort(
+      "`client` must be created by `sicar_client()`.",
+      "rsicar_invalid_argument"
+    )
+  }
+  if (length(dest_dir) != 1L || !is.character(dest_dir) || is.na(dest_dir)) {
+    .sicar_abort(
+      "`dest_dir` must be one non-missing path.",
+      "rsicar_invalid_argument"
+    )
+  }
   polygon <- .sicar_validate_polygon(polygon)
   results <- lapply(sicar_states(), function(state) {
     state_dir <- file.path(dest_dir, state)

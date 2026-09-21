@@ -16,7 +16,10 @@ functions. Defaults to a manual solver.}
 
 \item{headers}{Optional named character vector of additional HTTP headers.}
 
-\item{timeout}{Connection and transfer timeout in seconds.}
+\item{timeout}{Connection timeout, in seconds, applied both to establishing
+a connection and to how long a transfer may stall (stay below 1 byte/sec)
+before it is aborted. It is not a total transfer time limit, so large ZIP
+downloads are not cut off while data keeps flowing.}
 }
 \value{
 An object of class \code{sicar_client}.
@@ -24,4 +27,12 @@ An object of class \code{sicar_client}.
 \description{
 The client stores configuration only. It does not access the SICAR service
 until an operation such as \code{sicar_release_dates()} is called.
+}
+\examples{
+client <- sicar_client(solver = sicar_solver_manual())
+client <- sicar_client(
+  solver = sicar_solver_function(function(path) "AB12c"),
+  headers = c(`X-Custom` = "value"),
+  timeout = 120
+)
 }

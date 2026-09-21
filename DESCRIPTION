@@ -13,6 +13,8 @@ BugReports: https://github.com/kguidonimartins/rsicar/issues
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1)
 Imports:
     httr2,
     rlang,

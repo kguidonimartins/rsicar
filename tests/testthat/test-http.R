@@ -18,7 +18,7 @@ test_that("bootstrap accepts only the SICAR redirect", {
       body = charToRaw(release_fixture())
     )
   )
-  withr::local_options(httr2_mock = responses)
+  httr2::local_mocked_responses(responses)
 
   expect_invisible(rsicar:::.sicar_bootstrap(client))
   expect_identical(client$state$bootstrapped, TRUE)
@@ -42,7 +42,6 @@ test_that("release dates use bootstrap and validate HTML", {
     )
   )
   httr2::local_mocked_responses(responses)
-  withr::defer(httr2::local_mocked_responses(NULL))
 
   result <- sicar_release_dates(client)
 
@@ -70,4 +69,23 @@ test_that("response validation reports status and content type failures", {
     ),
     class = "rsicar_http_error"
   )
+})
+
+test_that("an unexpected 302 is retryable", {
+  unexpected_redirect <- httr2::response(
+    status_code = 302,
+    headers = list(location = "http://example.test/index")
+  )
+
+  error <- rlang::catch_cnd(
+    rsicar:::.sicar_require_response(
+      unexpected_redirect,
+      "https://example.test",
+      200,
+      "application/zip"
+    )
+  )
+
+  expect_s3_class(error, "rsicar_http_error")
+  expect_true(rsicar:::.sicar_retryable(error))
 })

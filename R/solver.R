@@ -10,8 +10,11 @@
       retryable = TRUE
     )
   }
-  value <- toupper(trimws(value))
-  if (!grepl("^[A-Z0-9]{5}$", value)) {
+  # SICAR CAPTCHAs are case-sensitive; only whitespace is stripped here.
+  # Do not uppercase, or correctly-read CAPTCHAs will be rejected by the
+  # service.
+  value <- trimws(value)
+  if (!grepl("^[A-Za-z0-9]{5}$", value)) {
     .sicar_abort(
       "A CAPTCHA solver must return exactly five alphanumeric characters.",
       "rsicar_solver_error",
@@ -31,6 +34,9 @@
 #' @param fn A function accepting a path to a CAPTCHA image and returning its
 #'   five-character answer.
 #' @returns An object usable as the `solver` argument of `sicar_client()`.
+#' @examples
+#' solver <- sicar_solver_function(function(path) "AB12c")
+#' solver$name
 #' @export
 sicar_solver_function <- function(fn) {
   if (!is.function(fn)) {

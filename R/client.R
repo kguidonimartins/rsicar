@@ -6,8 +6,18 @@
 #' @param solver A CAPTCHA solver created by one of the `sicar_solver_*()`
 #'   functions. Defaults to a manual solver.
 #' @param headers Optional named character vector of additional HTTP headers.
-#' @param timeout Connection and transfer timeout in seconds.
+#' @param timeout Connection timeout, in seconds, applied both to establishing
+#'   a connection and to how long a transfer may stall (stay below 1 byte/sec)
+#'   before it is aborted. It is not a total transfer time limit, so large ZIP
+#'   downloads are not cut off while data keeps flowing.
 #' @returns An object of class `sicar_client`.
+#' @examples
+#' client <- sicar_client(solver = sicar_solver_manual())
+#' client <- sicar_client(
+#'   solver = sicar_solver_function(function(path) "AB12c"),
+#'   headers = c(`X-Custom` = "value"),
+#'   timeout = 120
+#' )
 #' @export
 sicar_client <- function(
   solver = sicar_solver_manual(),

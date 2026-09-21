@@ -26,6 +26,17 @@ test_that("valid ZIPs are accepted and bad files are rejected", {
   )
 })
 
+test_that("sicar_download_country validates client and dest_dir", {
+  expect_error(
+    sicar_download_country("not-a-client", "apps", tempfile()),
+    class = "rsicar_invalid_argument"
+  )
+  expect_error(
+    sicar_download_country(sicar_client(), "apps", dest_dir = NA_character_),
+    class = "rsicar_invalid_argument"
+  )
+})
+
 test_that("country downloads preserve one result row per state", {
   client <- sicar_client()
   calls <- character()
@@ -137,6 +148,72 @@ test_that("non-retryable download failures stop immediately", {
   expect_identical(attempts, 1L)
 })
 
+test_that("an unexpected 302 forces a fresh bootstrap and is retried", {
+  zip_path <- tempfile(fileext = ".zip")
+  fixture <- tempfile(fileext = ".txt")
+  writeLines("fixture", fixture)
+  utils::zip(zip_path, files = fixture, flags = "-q")
+  zip_body <- readBin(zip_path, what = "raw", n = file.info(zip_path)$size)
+
+  client <- sicar_client(solver = sicar_solver_function(function(path) "ABCDE"))
+  client$urls$index <- "https://example.test/index"
+  client$urls$recaptcha <- "https://example.test/captcha"
+  client$urls$download_base <- "https://example.test/download"
+
+  index_calls <- 0L
+  captcha_calls <- 0L
+  mock <- function(req) {
+    if (grepl("/index$", req$url)) {
+      index_calls <<- index_calls + 1L
+      return(httr2::response(
+        status_code = 302,
+        url = req$url,
+        headers = list(`set-cookie` = "session=valid; Path=/")
+      ))
+    }
+    if (grepl("/captcha", req$url)) {
+      captcha_calls <<- captcha_calls + 1L
+      if (captcha_calls == 1L) {
+        # Simulate a session that expired between bootstrap and the
+        # first real request: SICAR redirects instead of serving a PNG.
+        return(httr2::response(
+          status_code = 302,
+          url = req$url,
+          headers = list(location = "http://example.test/index")
+        ))
+      }
+      return(httr2::response(
+        status_code = 200,
+        url = req$url,
+        headers = list(`content-type` = "image/png"),
+        body = charToRaw("not really an image")
+      ))
+    }
+    httr2::response(
+      status_code = 200,
+      url = req$url,
+      headers = list(`content-type` = "application/zip"),
+      body = zip_body
+    )
+  }
+  httr2::local_mocked_responses(mock)
+
+  destination <- withr::local_tempdir()
+  result <- sicar_download_state(
+    client,
+    state = "pa",
+    polygon = "apps",
+    dest_dir = destination,
+    tries = 2,
+    wait = function(seconds) NULL
+  )
+
+  expect_true(file.exists(result))
+  expect_identical(captcha_calls, 2L)
+  expect_identical(index_calls, 2L)
+  expect_identical(client$state$bootstrapped, TRUE)
+})
+
 test_that("state downloads validate and atomically rename a ZIP", {
   zip_path <- tempfile(fileext = ".zip")
   fixture <- tempfile(fileext = ".txt")
@@ -177,7 +254,6 @@ test_that("state downloads validate and atomically rename a ZIP", {
     )
   }
   httr2::local_mocked_responses(mock)
-  withr::defer(httr2::local_mocked_responses(NULL))
 
   destination <- withr::local_tempdir()
   result <- sicar_download_state(

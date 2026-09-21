@@ -15,3 +15,9 @@ A data frame with \code{state} and \code{date} columns for all 27 states.
 \description{
 Query SICAR polygon release dates
 }
+\examples{
+\dontrun{
+client <- sicar_client(solver = sicar_solver_manual())
+sicar_release_dates(client)
+}
+}

@@ -16,3 +16,7 @@ An object usable as the \code{solver} argument of \code{sicar_client()}.
 \description{
 Create a CAPTCHA solver from an R function
 }
+\examples{
+solver <- sicar_solver_function(function(path) "AB12c")
+solver$name
+}

@@ -41,3 +41,9 @@ The normalized path of the downloaded ZIP archive.
 \description{
 Download one SICAR polygon archive
 }
+\examples{
+\dontrun{
+client <- sicar_client(solver = sicar_solver_manual())
+sicar_download_state(client, "PA", "APPS", dest_dir = "SICAR/PA")
+}
+}

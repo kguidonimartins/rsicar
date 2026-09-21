@@ -66,6 +66,11 @@
 #'
 #' @param client An object created by [sicar_client()].
 #' @returns A data frame with `state` and `date` columns for all 27 states.
+#' @examples
+#' \dontrun{
+#' client <- sicar_client(solver = sicar_solver_manual())
+#' sicar_release_dates(client)
+#' }
 #' @export
 sicar_release_dates <- function(client) {
   if (!inherits(client, "sicar_client")) {

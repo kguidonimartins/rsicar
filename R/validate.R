@@ -25,6 +25,8 @@
 #' List the accepted Brazilian state abbreviations
 #'
 #' @returns A character vector with the 27 official state abbreviations.
+#' @examples
+#' sicar_states()
 #' @export
 sicar_states <- function() {
   .sicar_states
@@ -33,6 +35,8 @@ sicar_states <- function() {
 #' List the accepted SICAR polygon themes
 #'
 #' @returns A character vector with the accepted polygon theme codes.
+#' @examples
+#' sicar_polygon_types()
 #' @export
 sicar_polygon_types <- function() {
   .sicar_polygons

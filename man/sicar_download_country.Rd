@@ -40,3 +40,9 @@ A data frame with one row per state and \code{path}, \code{status}, and
 \description{
 Download one SICAR polygon archive for every Brazilian state
 }
+\examples{
+\dontrun{
+client <- sicar_client(solver = sicar_solver_manual())
+sicar_download_country(client, "APPS", dest_dir = "SICAR")
+}
+}

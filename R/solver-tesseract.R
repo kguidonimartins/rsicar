@@ -64,16 +64,32 @@
 #'
 #' The optional `magick` and `tesseract` packages are checked when this solver
 #' is created. The solver applies grayscale conversion, thresholding and
-#' morphology before using Tesseract page segmentation mode 7.
+#' morphology before using Tesseract page segmentation mode 8 (single word).
+#'
+#' This solver is experimental. On the upstream reference's own CAPTCHA
+#' fixtures it currently recognizes 2 of 3 correctly; occasional confusion
+#' between visually similar characters (for example `Z`/`2`) can still cause
+#' rejected CAPTCHAs, which `sicar_download_state()` retries. Prefer
+#' `sicar_solver_manual()` or a custom `sicar_solver_function()` where
+#' accuracy matters.
 #'
 #' @returns An object usable as the `solver` argument of `sicar_client()`.
+#' @examples
+#' \dontrun{
+#' # Requires the optional `magick` and `tesseract` R packages and the
+#' # Tesseract OCR program installed on the system.
+#' solver <- sicar_solver_tesseract()
+#' }
 #' @export
 sicar_solver_tesseract <- function() {
   .sicar_tesseract_requirements()
   engine <- tesseract::tesseract(
     language = "eng",
     options = list(
-      tessedit_pageseg_mode = 7,
+      # Page segmentation mode 8 ("treat the image as a single word")
+      # measurably outperforms mode 7 ("single text line") on SICAR's
+      # squeezed, strike-through CAPTCHAs.
+      tessedit_pageseg_mode = 8,
       tessedit_char_whitelist = paste0(
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
         "abcdefghijklmnopqrstuvwxyz",

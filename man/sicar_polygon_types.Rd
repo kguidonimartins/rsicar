@@ -12,3 +12,6 @@ A character vector with the accepted polygon theme codes.
 \description{
 List the accepted SICAR polygon themes
 }
+\examples{
+sicar_polygon_types()
+}

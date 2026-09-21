@@ -403,3 +403,202 @@ desacoplar o CAPTCHA desde o primeiro commit. Não há vantagem em envolver a
 implementação Python via `reticulate` no núcleo: isso manteria as dependências mais
 pesadas do projeto original e reduziria a portabilidade sem resolver a fragilidade
 do serviço externo.
+
+## Auditoria do estado atual (2026-09-21)
+
+Auditoria do repositório com teste de download real (Sergipe, `AREA_IMOVEL`,
+`tries = 5`), CAPTCHA resolvido por leitura visual dos PNGs (equivalente ao
+solver manual) e uma execução controlada do `sicar_solver_tesseract()` contra
+os 6 fixtures de CAPTCHA da referência Python.
+
+### Teste de download — Sergipe
+
+`sicar_download_state(client, "se", "AREA_IMOVEL", ..., tries = 5)` contra o
+serviço real:
+
+```
+[attempt 1] CAPTCHA correto "inRvK"  -> enviado como INRVK -> 200 application/json (rejeitado)
+[attempt 2..5] CAPTCHAs novos        -> rejeitados
+RESULT: FAILED — "Download failed on attempt 5."
+```
+
+As 5 tentativas falharam, apesar de a tentativa 1 ter lido o CAPTCHA
+corretamente. Repetindo com uma única linha corrigida (ver bloqueador 1):
+
+```
+RESULT: SUCCESS
+path: SE_AREA_IMOVEL.zip
+size: 38.323.401 bytes | 5 entradas (.shp .dbf .shx .prj .fix)
+```
+
+### Bloqueador 1 — `toupper()` inutiliza todo download
+
+`R/solver.R` normaliza a saída do solver com `toupper(trimws(value))`. Os
+CAPTCHAs do SICAR são **case-sensitive**. Evidência ao vivo:
+
+| enviado | CAPTCHA real | resposta |
+|---|---|---|
+| `WfDKS` | `WfDKS` | `200 application/zip`, 38,3 MB |
+| `AVGKD` | `AVGKd` | `200 application/json` — "Os caracteres da imagem não foram digitados corretamente." |
+| `INRVK` | `inRvK` | `200 application/json` (idem) |
+
+A referência Python (`sicar.py`, `download_state`) nunca altera a caixa do
+CAPTCHA, só confere `len(captcha) == 5`. Correção: remover o `toupper()` do
+solver e ajustar o regex para `^[A-Za-z0-9]{5}$`. O `toupper()` aplicado a UF
+e tema em `R/validate.R` está correto e deve permanecer — a normalização
+case-insensitive nesse caso é intencional (ver seção "Decisões de
+comportamento").
+
+### Bloqueador 2 — solver Tesseract com 0% de acerto
+
+Resultado nos 6 fixtures da referência (o gate da Fase 1 exige 3/3):
+
+```
+AbgBy -> Abok    Ca7Qk -> era     n3aoD -> ASROU
+qMT5V -> GFN     sgffr -> Syftr   ZS7pc -> Lott     => 0/6
+```
+
+Também 0/6 em CAPTCHAs reais obtidos ao vivo — nenhuma tentativa produziu
+sequer 5 caracteres válidos. Foi testada a hipótese de que faltava achatar o
+canal alfa (PNGs são gray+alpha e `.sicar_tesseract_preprocess()` não faz o
+flatten que a referência faz via `imsave`); adicionar
+`image_flatten(image_background(img, "white"))` muda a saída mas o resultado
+continua **0/6**. A divergência do pipeline de pré-processamento é maior:
+`cv2.threshold(..., THRESH_TRUNC | THRESH_OTSU)` virou
+`magick::image_threshold(type = "black")`, e as operações morfológicas do
+OpenCV rodam sobre a imagem binarizada, não sobre grayscale, na referência.
+Combinado ao bloqueador 1, nenhum download não interativo funciona hoje com o
+solver Tesseract.
+
+### Achados adicionais (severidade "major")
+
+- **`302` classificado como não retentável.** `.sicar_require_response()`
+  trata qualquer status fora do esperado, incluindo `302`, como erro fatal
+  não retentável. Verificado ao vivo: com `tries = 5`, uma sessão expirada
+  consome só 1 tentativa antes de abortar. Além disso, `.sicar_bootstrap()`
+  nunca reexecuta depois de `bootstrapped = TRUE`, então o cliente não se
+  recupera sozinho de uma sessão perdida.
+- **`timeout` é o tempo total da requisição**, com padrão de 60 s, mapeado
+  para a opção `timeout` do curl. SE tem 38 MB; outros estados chegam a
+  centenas de MB. Isso contradiz a diretriz da Fase 1 de usar "timeout de
+  conexão e timeout de baixa velocidade adequados a arquivos grandes" — a
+  opção correta é `connecttimeout` combinada com `low_speed_limit` /
+  `low_speed_time`.
+- **Os testes offline nunca exercitam a forma real de falha do CAPTCHA
+  rejeitado.** Os mocks simulam HTML ou não-ZIP; ao vivo a rejeição é
+  `200 application/json` de 58 bytes ("caracteres... não foram digitados
+  corretamente"). `test-live.R` cobre apenas `sicar_release_dates()` — o gate
+  de aceitação da Fase 1 ("pelo menos um ZIP real baixado, identificado como
+  ZIP e aberto por `unzip`") não constava dos testes automatizados; se
+  constasse, o bloqueador 1 teria sido pego antes.
+
+### Achados menores
+
+- `runif` usado sem `importFrom("stats", "runif")` → NOTE do
+  `R CMD check`; `utils::`/`stats::` não declarados em `Imports`.
+- Falta `Depends: R (>= 4.1)`: o pipe nativo `|>` e a vetorização de
+  `utils::URLencode()` exigem R ≥ 4.1.0.
+- `LICENSE` tem o texto MIT completo, mas `License: MIT + file LICENSE`
+  espera o stub DCF de duas linhas → NOTE "License stub is invalid DCF".
+  `LICENSE.md` foi usado para a atribuição ao projeto upstream em vez do
+  texto de licença renderizado.
+- `NEWS.md` → NOTE "No news entries found" (falta cabeçalho de versão no
+  formato que `R CMD check` reconhece).
+- Nenhuma função exportada tem `@examples` executável, apesar de o AGENTS.md
+  pedir "um exemplo quando fizer sentido" (`checking examples ... NONE`).
+- Os parâmetros de injeção de dependência (`wait`, `random`,
+  `attempt_download`, `download_state`) são argumentos públicos e
+  documentados de `sicar_download_state()`/`sicar_download_country()`, o que
+  expõe detalhes internos de teste na API pública.
+- Código morto: o bloco final de erro em `sicar_download_state()` (depois do
+  loop `for`) é inalcançável; em `.sicar_download_zip()`, o `writeBin()`
+  condicional também é inalcançável porque `req_perform(path =)` já grava o
+  arquivo.
+- `sicar_download_country()` não valida `client` nem `dest_dir` antes de
+  iterar, ao contrário de `sicar_download_state()`.
+- Estilo de mock HTTP inconsistente entre arquivos de teste
+  (`withr::local_options(httr2_mock = ...)` em um teste de `test-http.R`
+  versus `httr2::local_mocked_responses()` no restante da suíte).
+- `out-check.txt` e `out-testthat.txt` commitados estão desatualizados
+  (mostram 16 testes; a suíte atual tem 48).
+- `webfakes`, mencionado na Fase 3 como ferramenta de simulação de
+  protocolo, não está em `Suggests` nem em uso.
+
+### O que está correto
+
+TLS nunca é enfraquecido — a referência Python precisa fixar TLS 1.2 e uma
+lista específica de cifras para compatibilidade com o servidor SICAR; o porte
+R não precisou desse contorno. O pipeline de download (stream para arquivo
+temporário dentro de `dest_dir`, checagem de assinatura `PK`, validação via
+`unzip(list = TRUE)` e rename somente após validar) funcionou de ponta a
+ponta em um arquivo real de 38 MB. As condições estruturadas `rsicar_*`
+carregam campos de contexto úteis. `air format --check .` está limpo, os 48
+testes offline passam e `R CMD check` termina com 0 erros, 0 warnings e 3
+notes (as três descritas acima).
+
+### Ordem sugerida de correção
+
+1. Bloqueador 1 (`toupper()` no solver) — mudança de uma linha, destrava
+   todo o fluxo de download.
+2. Classificação de `302` como retentável + capacidade de o
+   `.sicar_bootstrap()` renovar a sessão.
+3. Timeouts de conexão/baixa velocidade adequados a arquivos grandes.
+4. Pipeline de pré-processamento do solver Tesseract, revisado item a item
+   contra a referência Python, até atingir o gate de 3/3 nos fixtures.
+5. Achados menores, incluindo os testes offline que devem passar a
+   simular a resposta real de CAPTCHA rejeitado.
+
+## Status das correções (2026-09-21)
+
+Todos os itens acima foram trabalhados nesta mesma sessão, na branch
+`audit-fixes`. Resumo do que foi feito e o que ficou em aberto:
+
+- **Bloqueador 1 (CAPTCHA case-sensitive) — corrigido.**
+  `.sicar_normalize_solver_output()` não usa mais `toupper()`. Reverificado
+  ao vivo pela API pública (sem patches): `sicar_download_state(client, "se",
+  "AREA_POUSIO", ..., tries = 1)` teve sucesso na primeira tentativa usando o
+  CAPTCHA exato lido (`sfvQ4`), baixando `SE_AREA_POUSIO.zip` (5 entradas).
+- **Bloqueador 2 (solver Tesseract) — melhorado, não fechado.** Trocar
+  `tessedit_pageseg_mode` de 7 para 8 (palavra única) elevou a acurácia nos 6
+  fixtures da referência de 0/6 para 3/6, e nos 3 fixtures que o teste
+  upstream de fato usa (`AbgBy`, `Ca7Qk`, `ZS7pc`), de 0/3 para 2/3. O erro
+  remanescente é confusão de caractere (`Z` lido como `2`) que persistiu
+  mesmo testando escala, padding, negativo e reordenação de kernel de
+  morfologia — parece ser um limite do mecanismo LSTM do Tesseract disponível
+  neste ambiente (o modo legado `oem 0` não tem `traineddata` instalado aqui
+  para comparar). O solver continua documentado como experimental,
+  recomendando o solver manual ou customizado onde acurácia importa.
+- **302 retentável + sessão renovada — corrigido.** `.sicar_require_response()`
+  agora trata `302` inesperado como retentável; `.sicar_attempt_download()`
+  reseta `client$state$bootstrapped` nesse caso e chama `.sicar_bootstrap()`
+  no início de cada tentativa, então a próxima tentativa renova a sessão
+  automaticamente. Testado com mock de dois estágios em
+  `test-download.R` (sessão expira na 1ª tentativa, recupera na 2ª).
+- **Timeouts para arquivos grandes — corrigido.** `.sicar_request()` trocou o
+  `timeout` total do curl por `connecttimeout` + `low_speed_time`/
+  `low_speed_limit`, então uma transferência grande não é mais interrompida
+  enquanto os dados continuam chegando.
+- **Achados menores — corrigidos:** `@importFrom(stats, runif)`;
+  `Depends: R (>= 4.1)` em `DESCRIPTION`; `LICENSE`/`LICENSE.md` trocados
+  para o formato DCF esperado por `License: MIT + file LICENSE`;
+  `NEWS.md` com cabeçalho `# rsicar 0.0.0.9000` (o texto anterior,
+  `(development version)`, não é reconhecido pelo parser do
+  `R CMD check`); `@examples` adicionados a todas as funções exportadas;
+  validação de `client`/`dest_dir` em `sicar_download_country()`; estilo de
+  mock HTTP unificado em `httr2::local_mocked_responses()` nos testes.
+- **Código "morto" revisado com cuidado.** O bloco final inalcançável em
+  `sicar_download_state()` foi removido. Já o fallback `writeBin()` em
+  `.sicar_download_zip()` **não** era código morto — respostas mockadas via
+  `httr2::local_mocked_responses()` não escrevem em `path =` durante
+  `req_perform()`, então esse fallback é necessário tanto para os testes
+  quanto para qualquer resposta real que não faça streaming. Ele foi mantido,
+  com um comentário explicando o motivo.
+- **Não feito nesta rodada:** adoção de `webfakes` para simular o protocolo
+  completo (Fase 3 do plano). Os testes offline continuam usando
+  `httr2::local_mocked_responses()`, que já cobre os casos de contrato
+  reescritos (sessão expirada, CAPTCHA rejeitado); migrar para `webfakes`
+  é uma tarefa de infraestrutura de teste maior e separada.
+
+Resultado após as correções: `air format --check .` limpo, 57/57 testes
+offline passam (eram 48), e `R CMD check` termina em **0 erros, 0 warnings,
+0 notes** (eram 1 warning e 4/3 notes, dependendo da execução).

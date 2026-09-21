@@ -12,3 +12,6 @@ A character vector with the 27 official state abbreviations.
 \description{
 List the accepted Brazilian state abbreviations
 }
+\examples{
+sicar_states()
+}

@@ -9,7 +9,16 @@
     c(list(.req = request), as.list(.sicar_headers(client)))
   )
   request |>
-    httr2::req_options(timeout = client$timeout, followlocation = FALSE) |>
+    httr2::req_options(
+      # `timeout` bounds only how long the connection may take to establish
+      # and how long a stalled transfer may sit below `low_speed_limit`
+      # bytes/sec. Large ZIP downloads can otherwise take several minutes,
+      # so a request-wide timeout would abort them mid-transfer.
+      connecttimeout = client$timeout,
+      low_speed_time = client$timeout,
+      low_speed_limit = 1,
+      followlocation = FALSE
+    ) |>
     httr2::req_cookie_preserve(client$state$cookie_jar)
 }
 
@@ -47,7 +56,11 @@
       url = url,
       status = actual_status,
       expected_status = status,
-      retryable = actual_status %in% c(408, 429, 500, 502, 503, 504)
+      # A 302 outside of bootstrap means the session's cookies were not
+      # accepted (typically an expired session); it is retryable so the
+      # download loop can force a fresh bootstrap. See
+      # `.sicar_attempt_download()`.
+      retryable = actual_status %in% c(302, 408, 429, 500, 502, 503, 504)
     )
   }
 
