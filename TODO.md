@@ -121,20 +121,20 @@ sicar_resolve_municipality("araçoiaba/PE")
 - [x] Não baixar a malha do `geobr` em tempo de execução: a função pública deve
   usar o artefato integrado e determinístico.
 
-## 4 — Implementar o resolvedor municipal
+## [x] 4 — Implementar o resolvedor municipal
 
-- [ ] Implementar a normalização e validação dos identificadores contra o
+- [x] Implementar a normalização e validação dos identificadores contra o
   catálogo municipal integrado.
-- [ ] Suportar um ou mais códigos IBGE, nomes canônicos sem acento e sem
+- [x] Suportar um ou mais códigos IBGE, nomes canônicos sem acento e sem
   distinção de caixa, `Municipio/UF`, siglas de UF e o argumento opcional `uf`.
-- [ ] Reproduzir a política de ambiguidade de `fbds_resolve()`: nunca resolver
+- [x] Reproduzir a política de ambiguidade de `fbds_resolve()`: nunca resolver
   silenciosamente um nome presente em mais de uma UF.
-- [ ] Criar condições de erro `rsicar_*` para entrada inválida, município
+- [x] Criar condições de erro `rsicar_*` para entrada inválida, município
   desconhecido e nome ambíguo, com os candidatos e a entrada original como
   contexto.
-- [ ] Garantir retorno determinístico, na ordem da primeira ocorrência e sem
+- [x] Garantir retorno determinístico, na ordem da primeira ocorrência e sem
   códigos duplicados; definir o comportamento de `strict = FALSE`.
-- [ ] Documentar e exportar a função, com exemplos totalmente offline.
+- [x] Documentar e exportar a função, com exemplos totalmente offline.
 
 ## 5 — Implementar a seleção espacial da AOI
 
