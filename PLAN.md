@@ -84,7 +84,8 @@ pipeline antes de tornar o OCR automático o comportamento padrão.
 ### Fora do escopo inicial
 
 - reimplementar PaddleOCR em R;
-- ler, unir ou transformar os shapefiles baixados;
+- recortar ou transformar permanentemente os shapefiles baixados; a seleção
+  municipal por interseção é oferecida por `sicar_extract_municipality()`;
 - downloads paralelos por padrão;
 - contornar mudanças de CAPTCHA ou controles de acesso do serviço;
 - garantir estabilidade de um serviço externo que não oferece API versionada.
@@ -127,6 +128,14 @@ Superfície pública inicial:
 - `sicar_states()` e `sicar_polygon_types()`: expõem os valores aceitos;
 - `sicar_solver_tesseract()`, `sicar_solver_manual()` e
   `sicar_solver_function(fn)`: implementam uma interface comum de CAPTCHA.
+- `sicar_resolve_municipality(x, uf, strict)`: resolve nomes, códigos IBGE,
+  UFs e identificadores `Municipio/UF` usando o lookup tabular municipal de
+  2025 integrado ao pacote;
+- `sicar_extract_municipality(x, src_dir)`: lê um ZIP ou todos os ZIPs de uma
+  pasta, seleciona com `sf::st_intersects()` as feições SICAR que tocam os
+  municípios solicitados e retorna um objeto `sf` sem gravar arquivos. No
+  primeiro uso, baixa a malha geométrica completa de 2025 pelo `geobr` e a
+  armazena no cache do usuário para as extrações seguintes.
 
 Decisões de comportamento:
 

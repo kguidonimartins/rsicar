@@ -16,9 +16,20 @@ test_that("sicar_read_manifest returns an empty frame when there is no manifest"
   expect_s3_class(manifest, "data.frame")
   expect_identical(nrow(manifest), 0L)
   expect_true(all(
-    c("state", "polygon", "file", "size_bytes", "md5", "downloaded_at",
-      "solver", "attempts", "tries", "overwrite", "rsicar_version",
-      "status") %in%
+    c(
+      "state",
+      "polygon",
+      "file",
+      "size_bytes",
+      "md5",
+      "downloaded_at",
+      "solver",
+      "attempts",
+      "tries",
+      "overwrite",
+      "rsicar_version",
+      "status"
+    ) %in%
       names(manifest)
   ))
 })

@@ -328,7 +328,6 @@ sicar_download_state <- function(
   }
 
   dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
-  .sicar_bootstrap(client)
 
   paths <- vapply(
     polygon,

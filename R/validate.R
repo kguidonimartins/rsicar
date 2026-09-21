@@ -62,5 +62,10 @@ sicar_polygon_types <- function() {
 }
 
 .sicar_validate_polygon <- function(polygon, multiple = FALSE) {
-  .sicar_normalize_choice(polygon, .sicar_polygons, "polygon", multiple = multiple)
+  .sicar_normalize_choice(
+    polygon,
+    .sicar_polygons,
+    "polygon",
+    multiple = multiple
+  )
 }

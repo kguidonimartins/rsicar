@@ -55,7 +55,11 @@
   manifest$updated_at <- .sicar_now_iso8601()
 
   path <- .sicar_manifest_path(dest_dir)
-  temporary <- tempfile("rsicar-manifest-", tmpdir = dest_dir, fileext = ".json")
+  temporary <- tempfile(
+    "rsicar-manifest-",
+    tmpdir = dest_dir,
+    fileext = ".json"
+  )
   jsonlite::write_json(
     manifest,
     temporary,
