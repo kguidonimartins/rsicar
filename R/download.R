@@ -70,7 +70,8 @@
         parent = error,
         url = url,
         path = path,
-        retryable = TRUE
+        retryable = TRUE,
+        slow_retry = TRUE
       )
     }
   )
@@ -125,9 +126,25 @@
   isTRUE(error$retryable)
 }
 
-.sicar_retry_delay <- function(attempt, random) {
-  base <- min(60, 2^(attempt - 1))
-  base + max(0, min(1, random()))
+.sicar_slow_retry <- function(error) {
+  isTRUE(error$slow_retry)
+}
+
+.sicar_retry_delay <- function(attempt, random, slow = FALSE) {
+  if (slow) {
+    # Reserved for signals that the service itself is struggling (a 5xx,
+    # 429, or a dropped connection): back off exponentially so retries
+    # don't add to the trouble.
+    base <- min(60, 2^(attempt - 1))
+    return(base + max(0, min(1, random())))
+  }
+  # Most retries just mean "that CAPTCHA guess was wrong" or "the session
+  # needed a fresh bootstrap" - routine, expected outcomes of automatic
+  # CAPTCHA solving, not signs of server trouble - so retry quickly. This
+  # mirrors the upstream Python client's flat ~0-2s jitter between
+  # attempts, which is what lets a solver with well under 100% accuracy
+  # still succeed automatically within a handful of seconds.
+  max(0, min(2, random() * 2))
 }
 
 #' Download one SICAR polygon archive
@@ -137,7 +154,12 @@
 #' @param polygon SICAR polygon type, case-insensitive.
 #' @param dest_dir Destination directory.
 #' @param overwrite Whether to replace an existing validated archive.
-#' @param tries Maximum number of attempts.
+#' @param tries Maximum number of attempts. Most failed attempts are just a
+#'   wrong CAPTCHA guess or an expired session, both retried within a couple
+#'   of seconds, so a solver well under 100% accuracy (such as
+#'   `sicar_solver_tesseract()`) still needs a generous budget to
+#'   automatically land a correct answer; this matches the default used by
+#'   the upstream Python client.
 #' @param wait Internal sleep function used between retry attempts.
 #' @param random Internal jitter function used to calculate retry delays.
 #' @param attempt_download Internal dependency-injection hook.
@@ -155,7 +177,7 @@ sicar_download_state <- function(
   polygon,
   dest_dir,
   overwrite = FALSE,
-  tries = 3,
+  tries = 25,
   wait = Sys.sleep,
   random = function() runif(1),
   attempt_download = .sicar_attempt_download
@@ -237,7 +259,11 @@ sicar_download_state <- function(
         retryable = FALSE
       )
     }
-    wait(.sicar_retry_delay(attempt, random))
+    wait(.sicar_retry_delay(
+      attempt,
+      random,
+      slow = .sicar_slow_retry(last_error)
+    ))
   }
 }
 
@@ -247,7 +273,8 @@ sicar_download_state <- function(
 #' @param polygon SICAR polygon type, case-insensitive.
 #' @param dest_dir Root destination directory.
 #' @param overwrite Whether to replace existing validated archives.
-#' @param tries Maximum number of attempts per state.
+#' @param tries Maximum number of attempts per state. See
+#'   [sicar_download_state()] for why the default is generous.
 #' @param download_state Internal dependency-injection hook; leave at its
 #'   default in normal use.
 #' @param wait Internal sleep function used between retry attempts.
@@ -265,7 +292,7 @@ sicar_download_country <- function(
   polygon,
   dest_dir,
   overwrite = FALSE,
-  tries = 3,
+  tries = 25,
   download_state = sicar_download_state,
   wait = Sys.sleep,
   random = function() runif(1)

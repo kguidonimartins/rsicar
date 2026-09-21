@@ -31,7 +31,12 @@
         "rsicar_http_error",
         parent = error,
         url = url,
-        retryable = TRUE
+        retryable = TRUE,
+        # A raw transport failure (DNS, connection reset, TLS handshake,
+        # genuine timeout) is the one case that plausibly means the server
+        # or network is struggling, so back off exponentially. See
+        # `.sicar_retry_delay()`.
+        slow_retry = TRUE
       )
     }
   )
@@ -45,6 +50,12 @@
 ) {
   actual_status <- httr2::resp_status(response)
   if (actual_status != status) {
+    # 408/429/5xx are the service telling us it is overloaded or
+    # rate-limiting; back off exponentially. A 302 outside of bootstrap just
+    # means the session expired, which a fresh bootstrap fixes immediately,
+    # so it is retried right away instead of being slowed down. See
+    # `.sicar_attempt_download()` and `.sicar_retry_delay()`.
+    server_signal <- actual_status %in% c(408, 429, 500, 502, 503, 504)
     .sicar_abort(
       sprintf(
         "Unexpected HTTP status %s for `%s`; expected %s.",
@@ -56,11 +67,8 @@
       url = url,
       status = actual_status,
       expected_status = status,
-      # A 302 outside of bootstrap means the session's cookies were not
-      # accepted (typically an expired session); it is retryable so the
-      # download loop can force a fresh bootstrap. See
-      # `.sicar_attempt_download()`.
-      retryable = actual_status %in% c(302, 408, 429, 500, 502, 503, 504)
+      retryable = server_signal || actual_status == 302L,
+      slow_retry = server_signal
     )
   }
 
@@ -78,7 +86,11 @@
         url = url,
         content_type = actual_type,
         expected_content_type = content_type,
-        retryable = TRUE
+        retryable = TRUE,
+        # Almost always means SICAR rejected the CAPTCHA (an expected,
+        # frequent outcome of automatic solving, not a server problem), so
+        # retry immediately with a fresh CAPTCHA rather than backing off.
+        slow_retry = FALSE
       )
     }
   }

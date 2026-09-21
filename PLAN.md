@@ -602,3 +602,83 @@ Todos os itens acima foram trabalhados nesta mesma sessão, na branch
 Resultado após as correções: `air format --check .` limpo, 57/57 testes
 offline passam (eram 48), e `R CMD check` termina em **0 erros, 0 warnings,
 0 notes** (eram 1 warning e 4/3 notes, dependendo da execução).
+
+## Investigação adicional: solução automática de CAPTCHA (2026-09-21, continuação)
+
+Depois das correções acima, testei se `sicar_solver_tesseract()` entrega uma
+experiência "automática, simplesmente funciona" equivalente à que o pacote
+Python oferece por padrão (o `Sicar()` do Python usa Tesseract por padrão,
+sem exigir entrada manual). Duas frentes:
+
+### Causa real da diferença de confiabilidade: `tries` e o tipo de backoff
+
+O Python usa `tries=25` por padrão e um `sleep` curto e praticamente fixo
+(`random.random() + random.random()`, ~0–2s) entre tentativas, **sem backoff
+exponencial**, para qualquer motivo de falha — incluindo CAPTCHA errado. O
+port R tinha `tries=3` e aplicava backoff exponencial (até 60s) mesmo para
+"CAPTCHA errado, tenta de novo", que é um resultado rotineiro e esperado de
+um solver automático, não um sinal de sobrecarga do servidor.
+
+Corrigido: `.sicar_require_response()`/`.sicar_perform()` agora marcam
+`slow_retry = TRUE` apenas para sinais reais de sobrecarga (408/429/5xx ou
+falha de transporte/rede); CAPTCHA rejeitado (mismatch de `Content-Type`) e
+sessão expirada (`302` inesperado) usam um atraso curto e quase fixo
+(`.sicar_retry_delay(..., slow = FALSE)`), igual ao Python. O `tries` padrão
+de `sicar_download_state()`/`sicar_download_country()` subiu de 3 para 25,
+igualando o upstream. Coberto por testes novos em `test-http.R` e
+`test-download.R` (retry rápido vs. exponencial, por classificação do erro).
+
+### Acurácia do OCR em CAPTCHAs reais: pior que os fixtures, sem correção clara encontrada
+
+Rodei o download real completo usando **somente** `sicar_solver_tesseract()`
+(sem eu ler nenhum CAPTCHA), com o novo `tries=25`. Resultado: **falhou nas
+25 tentativas**. Das 25, só 8 produziram uma saída de OCR com o formato
+válido (5 caracteres alfanuméricos) — as outras 17 foram rejeitadas antes
+mesmo de serem enviadas ao servidor por não terem esse formato — e nenhuma
+das 8 enviadas correspondia ao CAPTCHA real.
+
+Coletei 8 CAPTCHAs reais adicionais e comparei visualmente com os 6 fixtures
+da referência: os reais são visivelmente mais difíceis (letras mais coladas,
+traço de tachado mais grosso e irregular). Testei o pipeline já embarcado
+(Otsu + morfologia + `psm 8`) contra esses 8, com gabarito lido visualmente
+por mim: **1/8**, pior que os 3/6 medidos nos fixtures da referência — ou
+seja, os fixtures cacheados da referência não representam bem a dificuldade
+real atual do serviço.
+
+Testei uma hipótese adicional própria (não usada pela referência Python):
+remover o traço vermelho por cor (não por escala de cinza) antes do
+pré-processamento, já que o traço é vermelho e o texto é preto — em teoria
+mais fácil de segmentar por cor do que depois de tudo virar tons de cinza.
+Visualmente a remoção funciona bem (as letras ficam bem mais legíveis a
+olho). Mas combinada com o pipeline Otsu/morfologia já embarcado, o
+resultado piorou (0/6 nos fixtures, 0/8 nos CAPTCHAs reais) — a etapa de
+limiarização/morfologia existente parece ter sido implicitamente ajustada em
+torno do padrão de ruído da linha vermelha original, e não se dá bem com a
+imagem já limpa. Não fiz esse experimento avançar mais (testar um pipeline
+desenhado do zero em torno da imagem sem vermelho) por não ter uma amostra
+grande o bastante nem tempo de sessão para validar com confiança — descartei
+essa mudança em vez de embarcar algo não verificado.
+
+**Conclusão honesta:** a solução automática de CAPTCHA já existe e não exige
+sessão interativa (isso só é necessário com `sicar_solver_manual()`, que é
+opcional). Mas a acurácia por tentativa do solver Tesseract embarcado
+continua baixa em CAPTCHAs reais atuais — mais baixa do que os fixtures da
+referência sugeriam. A correção de `tries`/backoff é uma melhoria real e
+verificada (mesma estratégia do Python), mas não é uma garantia: com a
+acurácia observada, mesmo 25 tentativas podem falhar (como aconteceu numa
+das execuções reais). Não encontrei, nesta sessão, uma correção de
+pré-processamento que melhorasse isso de forma confiável.
+
+**Duas variáveis que não pude testar neste ambiente:** (1) o motor legado do
+Tesseract (`oem 0`) não tem `traineddata` instalado neste ambiente de teste
+— só o motor LSTM (`oem 1`) — e é possível que o motor legado tenha
+desempenho diferente nesta fonte estilizada; (2) a amostra de 8 CAPTCHAs
+reais é pequena, então a acurácia medida (1/8) tem incerteza alta.
+
+**Recomendação para quem depende de resolução automática confiável:**
+implementar um `sicar_solver_function()` customizado chamando um serviço
+pago de resolução de CAPTCHA (ex.: 2captcha, Anti-Captcha), o que é a
+abordagem padrão de mercado para este tipo de CAPTCHA distorcido — a
+interface do pacote já suporta isso sem mudanças. Alternativamente, testar
+`sicar_solver_tesseract()` no ambiente real de uso (fora deste sandbox), já
+que o motor Tesseract instalado pode se comportar diferente.

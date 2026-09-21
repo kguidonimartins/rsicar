@@ -9,7 +9,7 @@ sicar_download_country(
   polygon,
   dest_dir,
   overwrite = FALSE,
-  tries = 3,
+  tries = 25,
   download_state = sicar_download_state,
   wait = Sys.sleep,
   random = function() runif(1)
@@ -24,7 +24,8 @@ sicar_download_country(
 
 \item{overwrite}{Whether to replace existing validated archives.}
 
-\item{tries}{Maximum number of attempts per state.}
+\item{tries}{Maximum number of attempts per state. See
+\code{\link[=sicar_download_state]{sicar_download_state()}} for why the default is generous.}
 
 \item{download_state}{Internal dependency-injection hook; leave at its
 default in normal use.}

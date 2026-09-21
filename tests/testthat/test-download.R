@@ -82,7 +82,7 @@ test_that("country downloads preserve one result row per state", {
   expect_identical(result$status[result$state == "PA"], "failed")
 })
 
-test_that("retryable download failures use bounded jitter without real sleep", {
+test_that("server-signal failures back off exponentially without real sleep", {
   client <- sicar_client()
   client$state$bootstrapped <- TRUE
   destination <- withr::local_tempdir()
@@ -93,6 +93,47 @@ test_that("retryable download failures use bounded jitter without real sleep", {
     if (attempts == 1L) {
       rlang::abort(
         "temporary service failure",
+        class = "rsicar_download_error",
+        retryable = TRUE,
+        slow_retry = TRUE
+      )
+    }
+    fixture <- file.path(dest_dir, "temporary.zip")
+    source <- tempfile(fileext = ".txt")
+    writeLines("fixture", source)
+    utils::zip(fixture, source, flags = "-q")
+    fixture
+  }
+
+  result <- sicar_download_state(
+    client,
+    "PA",
+    "APPS",
+    destination,
+    tries = 2,
+    wait = function(seconds) delays <<- c(delays, seconds),
+    random = function() 0.25,
+    attempt_download = fake_attempt
+  )
+
+  expect_true(file.exists(result))
+  expect_identical(attempts, 2L)
+  expect_identical(delays, 1.25)
+})
+
+test_that("routine retries (e.g. a wrong CAPTCHA guess) use a short flat delay", {
+  client <- sicar_client()
+  client$state$bootstrapped <- TRUE
+  destination <- withr::local_tempdir()
+  attempts <- 0L
+  delays <- numeric()
+  fake_attempt <- function(client, state, polygon, dest_dir) {
+    attempts <<- attempts + 1L
+    if (attempts == 1L) {
+      # No `slow_retry` flag: this is what a rejected CAPTCHA or an expired
+      # session looks like, not a server-overload signal.
+      rlang::abort(
+        "CAPTCHA rejected",
         class = "rsicar_download_error",
         retryable = TRUE
       )
@@ -117,7 +158,8 @@ test_that("retryable download failures use bounded jitter without real sleep", {
 
   expect_true(file.exists(result))
   expect_identical(attempts, 2L)
-  expect_identical(delays, 1.25)
+  # max(0, min(2, 0.25 * 2)) = 0.5, versus 1.25 on the exponential path.
+  expect_identical(delays, 0.5)
 })
 
 test_that("non-retryable download failures stop immediately", {

@@ -10,7 +10,7 @@ sicar_download_state(
   polygon,
   dest_dir,
   overwrite = FALSE,
-  tries = 3,
+  tries = 25,
   wait = Sys.sleep,
   random = function() runif(1),
   attempt_download = .sicar_attempt_download
@@ -27,7 +27,12 @@ sicar_download_state(
 
 \item{overwrite}{Whether to replace an existing validated archive.}
 
-\item{tries}{Maximum number of attempts.}
+\item{tries}{Maximum number of attempts. Most failed attempts are just a
+wrong CAPTCHA guess or an expired session, both retried within a couple
+of seconds, so a solver well under 100\% accuracy (such as
+\code{sicar_solver_tesseract()}) still needs a generous budget to
+automatically land a correct answer; this matches the default used by
+the upstream Python client.}
 
 \item{wait}{Internal sleep function used between retry attempts.}
 
