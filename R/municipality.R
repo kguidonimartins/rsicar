@@ -9,7 +9,12 @@
 }
 
 .sicar_municipality_catalog <- function() {
-  sicar_municipalities
+  data.frame(
+    code_muni = as.character(sicar_municipalities$code_muni),
+    name_muni = as.character(sicar_municipalities$name_muni),
+    abbrev_state = as.character(sicar_municipalities$abbrev_state),
+    stringsAsFactors = FALSE
+  )
 }
 
 .sicar_resolve_municipality_code <- function(code, catalog, original) {
@@ -155,6 +160,7 @@
 #'
 #' @returns A character vector of unique seven-digit IBGE codes, in order of
 #'   first occurrence.
+#' @family municipality extraction
 #' @examples
 #' sicar_resolve_municipality(c("Recife", "Olinda", "Passos/MG"))
 #' sicar_resolve_municipality("sao lourenco da mata")

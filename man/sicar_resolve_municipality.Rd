@@ -30,3 +30,8 @@ names always fail instead of being resolved silently.
 sicar_resolve_municipality(c("Recife", "Olinda", "Passos/MG"))
 sicar_resolve_municipality("sao lourenco da mata")
 }
+\seealso{
+Other municipality extraction:
+\code{\link[=sicar_extract_municipality]{sicar_extract_municipality()}}
+}
+\concept{municipality extraction}

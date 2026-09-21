@@ -1,5 +1,8 @@
 # rsicar 0.0.0.9000
 
+* Added `sicar_extract_municipality()` and `sicar_resolve_municipality()` for
+  resolving IBGE municipality codes and selecting complete SICAR geometries
+  that intersect one or more municipalities.
 * Added the initial domain API with state and polygon constants, validation,
   structured conditions, clients, and user-defined CAPTCHA solvers.
 * Added `sicar_release_dates()` with lazy HTTPS bootstrap, persistent cookies,

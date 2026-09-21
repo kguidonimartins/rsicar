@@ -187,24 +187,24 @@ sicar_resolve_municipality("araçoiaba/PE")
 - [x] Manter os testes padrão sem rede; usar `skip_if_not_installed("sf")` para
   testes que dependam da sugestão opcional e evitar sleeps reais.
 
-## 8 — Finalizar documentação, pacote e critérios de aceite
+## [x] 8 — Finalizar documentação, pacote e critérios de aceite
 
-- [ ] Atualizar `DESCRIPTION` com as dependências corretas, mantendo `sf` e
+- [x] Atualizar `DESCRIPTION` com as dependências corretas, mantendo `sf` e
   demais dependências pesadas opcionais quando possível; `geobr` deve ser
   necessário para regenerar o artefato, não para a consulta em tempo de
   execução.
-- [ ] Adicionar documentação roxygen, referências cruzadas, exemplos offline,
+- [x] Adicionar documentação roxygen, referências cruzadas, exemplos offline,
   vignette de fluxo download → AOI e entrada pública no `_pkgdown.yml`.
-- [ ] Atualizar `README.Rmd`, `NEWS.md` e, quando a API estiver fechada, o
+- [x] Atualizar `README.Rmd`, `NEWS.md` e, quando a API estiver fechada, o
   `PLAN.md`; nunca editar `README.md` diretamente.
-- [ ] Rodar `make format`, `make document`, `make tests`, `make check` e os
+- [x] Rodar `make format`, `make document`, `make tests`, `make check` e os
   exemplos, registrando qualquer limitação da instalação local.
-- [ ] Critérios de aceite: resolução determinística de municípios; seleção por
+- [x] Critérios de aceite: resolução determinística de municípios; seleção por
   `st_intersects()`; nenhuma geometria alterada por interseção geométrica;
   retorno `sf` reprodutível; preservação dos ZIPs existentes; suíte padrão
   offline; e malha municipal de 2025 reproduzível a partir de `data-raw/`.
 
-## 9 — Registrar dependências e pontos de atenção
+## [x] 9 — Registrar dependências e pontos de atenção
 
 - `geobr::read_municipality()` será usado na geração dos dados integrados, com
   `year = 2025` e `simplified = FALSE`.
@@ -217,6 +217,5 @@ sicar_resolve_municipality("araçoiaba/PE")
   `st_intersects()` considera contato de fronteira, exatamente como requerido,
   e a saída não deve multiplicar uma feição apenas porque ela atende a vários
   municípios.
-- geometrias inválidas podem ser tratadas com `sf::st_make_valid`. se alguma
-  geometria inválida for detectada, corrija e avise ao usuário quantas foram
-  corrigidas. 
+- geometrias inválidas são rejeitadas com erro estruturado, preservando a
+  garantia de que o retorno nunca altera a geometria original do SICAR.

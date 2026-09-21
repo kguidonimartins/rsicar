@@ -1,0 +1,60 @@
+---
+title: "Extração de AOIs municipais"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Extração de AOIs municipais}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+O SICAR disponibiliza os dados para download por estado e tema, não por
+município. Depois de baixar os ZIPs com `sicar_download_state()` ou
+`sicar_download_country()`, `sicar_extract_municipality()` permite selecionar
+as feições que tocam os municípios de interesse.
+
+## Resolver municípios
+
+`sicar_resolve_municipality()` aceita nomes com ou sem acentos, códigos IBGE,
+siglas de UF e a forma `Municipio/UF`:
+
+```{r}
+rsicar::sicar_resolve_municipality(
+  c("Recife", "sao lourenco da mata", "Passos/MG")
+)
+```
+
+Um nome encontrado em mais de uma UF gera erro em vez de escolher um município
+arbitrariamente. Use a UF no identificador ou no argumento `uf`:
+
+```r
+rsicar::sicar_resolve_municipality("araçoiaba/PE")
+rsicar::sicar_resolve_municipality("araçoiaba", uf = "PE")
+```
+
+## Selecionar as feições
+
+`src_dir` pode ser um único ZIP ou uma pasta. Quando recebe uma pasta, a função
+procura recursivamente todos os ZIPs, inclusive nas subpastas de estados. A
+seleção usa `sf::st_intersects()`: uma feição que cruza ou apenas toca o limite
+municipal é mantida com seus atributos e sua geometria completa.
+
+```{r, eval=FALSE}
+features <- rsicar::sicar_extract_municipality(
+  c("Recife", "Olinda"),
+  src_dir = "SICAR/PE"
+)
+```
+
+O retorno é um objeto `sf`, não um arquivo. Se desejar persistir a AOI, faça
+isso explicitamente:
+
+```{r, eval=FALSE}
+sf::st_write(features, "minha-aoi.gpkg")
+```
+
+A função preserva os ZIPs de origem e retorna um objeto vazio, mantendo o
+esquema espacial, quando nenhum dado toca os municípios solicitados.

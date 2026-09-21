@@ -26,6 +26,7 @@
 ^out-check\.txt$
 ^out-check-fast\.txt$
 ^out-check-cran\.txt$
+^out-examples\.txt$
 ^out-testthat\.txt$
 ^out-gp\.txt$
 ^out-eg\.txt$

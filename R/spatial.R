@@ -162,6 +162,7 @@
 #' @returns An `sf` object containing the selected original SICAR features.
 #'   If no source feature intersects the requested municipalities, the result
 #'   has zero rows and retains the source schema.
+#' @family municipality extraction
 #' @examples
 #' \dontrun{
 #' features <- sicar_extract_municipality(

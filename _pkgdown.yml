@@ -14,6 +14,13 @@ reference:
       - sicar_release_dates
       - sicar_download_state
       - sicar_download_country
+      - sicar_read_manifest
+      - sicar_download_status
+      - sicar_download_country_status
+  - title: Municipality extraction
+    contents:
+      - sicar_resolve_municipality
+      - sicar_extract_municipality
   - title: CAPTCHA solvers
     contents:
       - sicar_solver_function

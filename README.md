@@ -80,6 +80,21 @@ sicar_read_manifest("SICAR/PA")
 sicar_download_status("SICAR/PA")
 ```
 
+Para selecionar as geometrias que tocam um ou mais municípios a partir
+dos ZIPs já baixados, resolva os municípios pelos nomes ou códigos IBGE
+e passe um ZIP ou uma pasta de origem. A função retorna um objeto `sf`
+sem recortar as geometrias e sem gravar arquivos automaticamente:
+
+``` r
+sicar_resolve_municipality(c("Recife", "Olinda", "Paulista/PE"))
+
+features <- sicar_extract_municipality(
+  c("Recife", "Olinda"),
+  src_dir = "SICAR/PE"
+)
+sf::st_write(features, "minha-aoi.gpkg")
+```
+
 Consulte as vignettes para configurar solvers customizados e entender as
 garantias de validação dos arquivos baixados.
 
