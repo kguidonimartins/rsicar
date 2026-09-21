@@ -24,6 +24,7 @@
 ^\.dev$
 ^py$
 ^out-check\.txt$
+^out-check-fast\.txt$
 ^out-check-cran\.txt$
 ^out-testthat\.txt$
 ^out-gp\.txt$
@@ -34,6 +35,7 @@
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^data-raw$
+^tools$
 ^data$
 ^myfolder$
 ^ma-box$

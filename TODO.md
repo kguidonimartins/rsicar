@@ -164,6 +164,13 @@ sicar_resolve_municipality("araçoiaba/PE")
 - [ ] Garantir que o resultado possa ser gravado pelo usuário posteriormente
   com `sf::st_write()` caso deseje persistir a AOI.
 
+## [x] Temporário — acelerar o ciclo de desenvolvimento
+
+- [x] Adicionar `make check-fast`, que verifica uma cópia descartável do pacote
+  com um `sysdata.rda` mínimo e sem testes/exemplos/vignettes. Esse alvo é
+  somente um atalho de desenvolvimento; o `make check` completo continua
+  obrigatório antes de cada commit de tarefa.
+
 ## 7 — Criar testes offline
 
 - [ ] Adicionar fixtures espaciais pequenos e determinísticos para município,

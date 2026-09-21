@@ -5,7 +5,7 @@ PKGNAME := $(shell sed -n "s/^Package: *\([^ ]*\)/\1/p" DESCRIPTION 2>/dev/null)
 PKGVERS := $(shell sed -n "s/^Version: *\([^ ]*\)/\1/p" DESCRIPTION 2>/dev/null)
 
 .PHONY: help require-package install_deps document format tests test examples build \
-	check check-cran install quick-install clean render site live-tests all
+	check check-fast check-cran install quick-install clean render site live-tests all
 
 require-package:
 	@test -f DESCRIPTION || { echo "DESCRIPTION not found; create the package skeleton first."; exit 1; }
@@ -19,7 +19,7 @@ document: require-package ## refresh package documentation
 	$(R) -e "devtools::document()"
 
 format: ## format R, R Markdown, and Quarto files with air
-	air format R/*.R tests/*.R tests/testthat/*.R data-raw/*.R README.Rmd vignettes/*.Rmd
+	air format R/*.R tests/*.R tests/testthat/*.R data-raw/*.R tools/*.R README.Rmd vignettes/*.Rmd
 
 tests: require-package ## run the offline test suite
 	$(R) -e "Sys.setenv(TESTTHAT_MAX_FAILS = Inf); devtools::test()" 2>&1 | tee out-testthat.txt
@@ -34,6 +34,9 @@ build: require-package document ## build the source package
 
 check: require-package ## run R CMD check through devtools
 	$(R) -e "devtools::check(cran = TRUE)" 2>&1 | tee out-check.txt
+
+check-fast: require-package ## run a fast development check without the large catalog
+	$(R) tools/check-fast.R 2>&1 | tee out-check-fast.txt
 
 check-cran: require-package ## run a CRAN-like check without a PDF manual
 	$(R) -e "Sys.setenv('_R_CHECK_SYSTEM_CLOCK_' = 0); devtools::check(cran = TRUE, args = '--no-manual')" 2>&1 | tee out-check-cran.txt
