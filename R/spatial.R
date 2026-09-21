@@ -47,9 +47,10 @@
         )
       }
     )
-    if (is.null(sf::st_crs(source))) {
+    source_crs <- sf::st_crs(source)
+    if (is.na(source_crs)) {
       .sicar_abort(
-        sprintf("Source shapefile has no CRS: `%s`.", path),
+        "Source shapefile has no CRS.",
         "rsicar_spatial_error",
         path = zip_path,
         layer = path
@@ -59,7 +60,7 @@
     valid <- sf::st_is_valid(source, NA_on_exception = TRUE)
     if (anyNA(valid) || any(!valid)) {
       .sicar_abort(
-        sprintf("Source shapefile contains invalid geometries: `%s`.", path),
+        "Source shapefile contains invalid geometries.",
         "rsicar_spatial_error",
         path = zip_path,
         layer = path

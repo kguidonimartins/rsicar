@@ -1,6 +1,11 @@
 skip_if_not_installed("sf")
 
-make_source_zip <- function(data, directory, name = "source.zip") {
+make_source_zip <- function(
+  data,
+  directory,
+  name = "source.zip",
+  remove_prj = FALSE
+) {
   layer_dir <- file.path(
     directory,
     paste0("layer-", tools::file_path_sans_ext(name))
@@ -8,6 +13,9 @@ make_source_zip <- function(data, directory, name = "source.zip") {
   dir.create(layer_dir)
   shapefile <- file.path(layer_dir, "sicar.shp")
   sf::st_write(data, shapefile, quiet = TRUE, delete_layer = TRUE)
+  if (remove_prj) {
+    file.remove(file.path(layer_dir, "sicar.prj"))
+  }
   archive <- file.path(directory, name)
   utils::zip(
     archive,
@@ -146,6 +154,43 @@ test_that("source archives without shapefiles are rejected", {
   writeLines("fixture", text_path)
   archive <- file.path(root, "source.zip")
   utils::zip(archive, text_path, flags = "-qj")
+
+  expect_snapshot(
+    error = TRUE,
+    sicar_extract_municipality("Recife", archive)
+  )
+})
+
+test_that("source shapefiles without a CRS are rejected", {
+  source <- sf::st_sf(
+    id = "missing-crs",
+    geometry = sf::st_sfc(sf::st_point(c(0, 0)), crs = 4674)
+  )
+  archive <- make_source_zip(
+    source,
+    withr::local_tempdir(),
+    remove_prj = TRUE
+  )
+
+  expect_snapshot(
+    error = TRUE,
+    sicar_extract_municipality("Recife", archive)
+  )
+})
+
+test_that("invalid source geometries are rejected", {
+  invalid <- sf::st_polygon(list(rbind(
+    c(0, 0),
+    c(1, 1),
+    c(1, 0),
+    c(0, 1),
+    c(0, 0)
+  )))
+  source <- sf::st_sf(
+    id = "invalid",
+    geometry = sf::st_sfc(invalid, crs = 4674)
+  )
+  archive <- make_source_zip(source, withr::local_tempdir())
 
   expect_snapshot(
     error = TRUE,

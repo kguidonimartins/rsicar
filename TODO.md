@@ -171,20 +171,20 @@ sicar_resolve_municipality("araçoiaba/PE")
   somente um atalho de desenvolvimento; o `make check` completo continua
   obrigatório antes de cada commit de tarefa.
 
-## 7 — Criar testes offline
+## [x] 7 — Criar testes offline
 
-- [ ] Adicionar fixtures espaciais pequenos e determinísticos para município,
+- [x] Adicionar fixtures espaciais pequenos e determinísticos para município,
   feição que cruza o limite, feição que apenas toca o limite, feição fora da
   AOI e feição que toca dois municípios.
-- [ ] Testar o resolvedor para códigos, nomes, acentos, UF, ambiguidade,
+- [x] Testar o resolvedor para códigos, nomes, acentos, UF, ambiguidade,
   desconhecidos, entradas vazias, duplicatas e `strict`.
-- [ ] Testar que `st_intersects()` seleciona a feição completa e que a
+- [x] Testar que `st_intersects()` seleciona a feição completa e que a
   geometria de saída é igual à geometria de origem, sem recorte.
-- [ ] Testar múltiplos municípios, deduplicação, CRS diferente, ausência de CRS,
+- [x] Testar múltiplos municípios, deduplicação, CRS diferente, ausência de CRS,
   resultado vazio, ZIP inválido e camada espacial ausente.
-- [ ] Verificar diretamente o objeto `sf` retornado: geometria, atributos,
+- [x] Verificar diretamente o objeto `sf` retornado: geometria, atributos,
   CRS, número de feições, deduplicação e ausência de recorte geométrico.
-- [ ] Manter os testes padrão sem rede; usar `skip_if_not_installed("sf")` para
+- [x] Manter os testes padrão sem rede; usar `skip_if_not_installed("sf")` para
   testes que dependam da sugestão opcional e evitar sleeps reais.
 
 ## 8 — Finalizar documentação, pacote e critérios de aceite
