@@ -19,7 +19,7 @@ document: require-package ## refresh package documentation
 	$(R) -e "devtools::document()"
 
 format: ## format R, R Markdown, and Quarto files with air
-	air format .
+	air format R/*.R tests/*.R tests/testthat/*.R data-raw/*.R README.Rmd vignettes/*.Rmd
 
 tests: require-package ## run the offline test suite
 	$(R) -e "Sys.setenv(TESTTHAT_MAX_FAILS = Inf); devtools::test()" 2>&1 | tee out-testthat.txt

@@ -99,25 +99,26 @@ sicar_resolve_municipality("araçoiaba/PE")
 - [x] Reutilizar a validação existente de ZIP e distinguir erros de arquivo,
   camada, leitura espacial e seleção vazia com condições `rsicar_*` úteis.
 
-## 3 — Incorporar a malha municipal de referência
+## [x] 3 — Incorporar a malha municipal de referência
 
-- [ ] Criar um script reprodutível em `data-raw/` que execute
+- [x] Criar um script reprodutível em `data-raw/` que execute
   `geobr::read_municipality(year = 2025, simplified = FALSE)` com progresso
   desativado durante a geração do artefato.
-- [ ] Manter no artefato somente as colunas necessárias para resolução e
+- [x] Manter no artefato somente as colunas necessárias para resolução e
   interseção, preservando os códigos IBGE como texto de sete dígitos, os nomes,
   as UFs e a coluna de geometria.
-- [ ] Registrar no script e na documentação a fonte `geobr`, o ano de
+- [x] Registrar no script e na documentação a fonte `geobr`, o ano de
   referência, a data/versão usada para gerar o artefato, o CRS e qualquer
   transformação aplicada.
-- [ ] Escolher e justificar o armazenamento como dado interno do pacote
+- [x] Escolher e justificar o armazenamento como dado interno do pacote
   (`R/sysdata.rda`) ou como dataset do pacote (`data/*.rda`), seguindo a
   distinção de dados internos e dados disponíveis ao usuário em
   <https://r-pkgs.org/data.html>.
-- [ ] Medir o tamanho comprimido do artefato, verificar o impacto no tamanho do
+- [x] Medir o tamanho comprimido do artefato, verificar o impacto no tamanho do
   pacote e testar que ele é carregado com `devtools::load_all()` e após a
-  instalação.
-- [ ] Não baixar a malha do `geobr` em tempo de execução: a função pública deve
+  instalação. O artefato comprimido ocupa aproximadamente 103 MB e o pacote
+  instalado aproximadamente 122 MB.
+- [x] Não baixar a malha do `geobr` em tempo de execução: a função pública deve
   usar o artefato integrado e determinístico.
 
 ## 4 — Implementar o resolvedor municipal

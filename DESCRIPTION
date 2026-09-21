@@ -23,9 +23,11 @@ Imports:
     xml2
 Suggests:
     devtools,
+    geobr,
     knitr,
     magick,
     rmarkdown,
+    sf,
     testthat (>= 3.0.0),
     tesseract,
     withr
