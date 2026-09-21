@@ -2,8 +2,11 @@
 
 export(sicar_client)
 export(sicar_download_country)
+export(sicar_download_country_status)
 export(sicar_download_state)
+export(sicar_download_status)
 export(sicar_polygon_types)
+export(sicar_read_manifest)
 export(sicar_release_dates)
 export(sicar_solver_function)
 export(sicar_solver_manual)

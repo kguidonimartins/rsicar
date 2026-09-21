@@ -53,3 +53,12 @@
   while a CAPTCHA is being solved, and a byte-level progress bar with ETA
   for the ZIP transfer once a CAPTCHA succeeds. Both are silent in
   non-interactive sessions.
+* Added a `manifest.json` written to `dest_dir` after every successful
+  `sicar_download_state()` download, recording the state, polygon type,
+  file size and MD5 checksum, download timestamp, CAPTCHA solver used, and
+  attempts taken. Added `sicar_read_manifest()` to read it back as a data
+  frame, and `sicar_download_status()` / `sicar_download_country_status()`
+  to diagnose which polygon types are downloaded, missing, or corrupted
+  (recorded but no longer present on disk at the recorded size) - for
+  example, to see what is left to retry after a CAPTCHA solver exhausted
+  its `tries` on some polygon type.

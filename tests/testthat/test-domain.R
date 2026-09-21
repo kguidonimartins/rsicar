@@ -63,3 +63,14 @@ test_that("multiple polygon validation rejects unknown values upfront", {
     class = "rsicar_invalid_argument"
   )
 })
+
+test_that("state validation also accepts multiple values", {
+  expect_identical(
+    rsicar:::.sicar_validate_state(c(" pa ", "ac", "pa"), multiple = TRUE),
+    c("PA", "AC")
+  )
+  expect_error(
+    rsicar:::.sicar_validate_state(c("pa", "xx"), multiple = TRUE),
+    class = "rsicar_invalid_argument"
+  )
+})
