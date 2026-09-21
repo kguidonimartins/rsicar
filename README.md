@@ -52,6 +52,18 @@ sicar_download_state(
 )
 ```
 
+`polygon` aceita um vetor com mais de um tipo; todos os valores são
+validados antes de iniciar qualquer download:
+
+``` r
+sicar_download_state(
+  client,
+  state = "PA",
+  polygon = c("APPS", "RESERVA_LEGAL"),
+  dest_dir = "SICAR/PA"
+)
+```
+
 Consulte as vignettes para configurar solvers customizados e entender as
 garantias de validação dos arquivos baixados.
 

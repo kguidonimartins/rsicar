@@ -162,6 +162,56 @@ test_that("routine retries (e.g. a wrong CAPTCHA guess) use a short flat delay",
   expect_identical(delays, 0.5)
 })
 
+test_that("multiple polygons are validated upfront before any download starts", {
+  client <- sicar_client()
+  attempts <- character()
+  fake_attempt <- function(client, state, polygon, dest_dir) {
+    attempts <<- c(attempts, polygon)
+    stop("should not be called")
+  }
+
+  expect_error(
+    sicar_download_state(
+      client,
+      "PA",
+      c("APPS", "unknown"),
+      withr::local_tempdir(),
+      attempt_download = fake_attempt
+    ),
+    class = "rsicar_invalid_argument"
+  )
+  expect_length(attempts, 0L)
+})
+
+test_that("state downloads accept a polygon vector and return a named path vector", {
+  client <- sicar_client()
+  destination <- withr::local_tempdir()
+  calls <- character()
+  fake_attempt <- function(client, state, polygon, dest_dir) {
+    calls <<- c(calls, polygon)
+    fixture <- file.path(dest_dir, paste0(state, "_", polygon, "-tmp.zip"))
+    source <- tempfile(fileext = ".txt")
+    writeLines("fixture", source)
+    utils::zip(fixture, source, flags = "-q")
+    fixture
+  }
+
+  result <- sicar_download_state(
+    client,
+    "PA",
+    c("apps", "reserva_legal"),
+    destination,
+    tries = 1,
+    attempt_download = fake_attempt
+  )
+
+  expect_identical(calls, c("APPS", "RESERVA_LEGAL"))
+  expect_identical(names(result), c("APPS", "RESERVA_LEGAL"))
+  expect_identical(basename(result[["APPS"]]), "PA_APPS.zip")
+  expect_identical(basename(result[["RESERVA_LEGAL"]]), "PA_RESERVA_LEGAL.zip")
+  expect_true(all(file.exists(result)))
+})
+
 test_that("non-retryable download failures stop immediately", {
   client <- sicar_client()
   client$state$bootstrapped <- TRUE

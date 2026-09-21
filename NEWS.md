@@ -43,3 +43,8 @@
   (for example wrapping a paid CAPTCHA-solving API) where reliability
   matters.
 * Renamed structured condition classes to the `rsicar_*` prefix.
+* `sicar_download_state()`'s `polygon` argument now accepts a character
+  vector to download several polygon types for a state in one call. All
+  requested polygon types are validated upfront, before any download starts;
+  the result is a character vector of paths named by polygon type when more
+  than one is requested.
