@@ -24,7 +24,10 @@ sicar_download_state(
 \item{polygon}{One or more SICAR polygon types, case-insensitive. All
 values are validated before any download starts.}
 
-\item{dest_dir}{Destination directory.}
+\item{dest_dir}{Destination directory. Each successful download is also
+recorded in a \code{manifest.json} file there (state, polygon, file size and
+MD5 checksum, download timestamp, CAPTCHA solver, and attempts taken);
+see \code{\link[=sicar_read_manifest]{sicar_read_manifest()}} and \code{\link[=sicar_download_status]{sicar_download_status()}}.}
 
 \item{overwrite}{Whether to replace an existing validated archive.}
 

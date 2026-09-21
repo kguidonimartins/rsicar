@@ -20,7 +20,10 @@ sicar_download_country(
 
 \item{polygon}{SICAR polygon type, case-insensitive.}
 
-\item{dest_dir}{Root destination directory.}
+\item{dest_dir}{Root destination directory. Each state gets its own
+subdirectory and \code{manifest.json}, written by \code{\link[=sicar_download_state]{sicar_download_state()}};
+see \code{\link[=sicar_download_country_status]{sicar_download_country_status()}} to diagnose the whole tree at
+once.}
 
 \item{overwrite}{Whether to replace existing validated archives.}
 

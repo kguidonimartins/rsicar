@@ -161,7 +161,17 @@
   final_path <- file.path(dest_dir, paste0(state, "_", polygon, ".zip"))
   if (file.exists(final_path) && !overwrite) {
     .sicar_validate_zip(final_path)
-    return(normalizePath(final_path, mustWork = TRUE))
+    normalized <- normalizePath(final_path, mustWork = TRUE)
+    .sicar_manifest_ensure_recorded(
+      dest_dir,
+      state,
+      polygon,
+      normalized,
+      client,
+      tries,
+      overwrite
+    )
+    return(normalized)
   }
 
   # Most attempts are just a rejected CAPTCHA guess, not a stalled network
@@ -201,7 +211,18 @@
           attempt = attempt
         )
       }
-      return(normalizePath(final_path, mustWork = TRUE))
+      normalized <- normalizePath(final_path, mustWork = TRUE)
+      .sicar_manifest_record_download(
+        dest_dir,
+        state,
+        polygon,
+        normalized,
+        client,
+        attempt,
+        tries,
+        overwrite
+      )
+      return(normalized)
     }
     if (!.sicar_retryable(last_error) || attempt == as.integer(tries)) {
       .sicar_abort(
@@ -228,7 +249,10 @@
 #' @param state Brazilian state abbreviation, case-insensitive.
 #' @param polygon One or more SICAR polygon types, case-insensitive. All
 #'   values are validated before any download starts.
-#' @param dest_dir Destination directory.
+#' @param dest_dir Destination directory. Each successful download is also
+#'   recorded in a `manifest.json` file there (state, polygon, file size and
+#'   MD5 checksum, download timestamp, CAPTCHA solver, and attempts taken);
+#'   see [sicar_read_manifest()] and [sicar_download_status()].
 #' @param overwrite Whether to replace an existing validated archive.
 #' @param tries Maximum number of attempts per polygon. Most failed attempts
 #'   are just a wrong CAPTCHA guess or an expired session, both retried
@@ -331,7 +355,10 @@ sicar_download_state <- function(
 #'
 #' @param client An object created by [sicar_client()].
 #' @param polygon SICAR polygon type, case-insensitive.
-#' @param dest_dir Root destination directory.
+#' @param dest_dir Root destination directory. Each state gets its own
+#'   subdirectory and `manifest.json`, written by [sicar_download_state()];
+#'   see [sicar_download_country_status()] to diagnose the whole tree at
+#'   once.
 #' @param overwrite Whether to replace existing validated archives.
 #' @param tries Maximum number of attempts per state. See
 #'   [sicar_download_state()] for why the default is generous.

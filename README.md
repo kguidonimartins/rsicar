@@ -64,6 +64,20 @@ sicar_download_state(
 )
 ```
 
+Cada download bem-sucedido é registrado em um `manifest.json` dentro de
+`dest_dir`, com estado, tipo de polígono, tamanho e checksum MD5 do
+arquivo, data/hora, solver de CAPTCHA utilizado e número de tentativas.
+Use `sicar_read_manifest()` para ler esse arquivo e
+`sicar_download_status()` (ou `sicar_download_country_status()`, para
+uma árvore inteira de `sicar_download_country()`) para diagnosticar o
+que falta baixar — por exemplo, depois que um solver esgotou as
+tentativas em algum polígono:
+
+``` r
+sicar_read_manifest("SICAR/PA")
+sicar_download_status("SICAR/PA")
+```
+
 Consulte as vignettes para configurar solvers customizados e entender as
 garantias de validação dos arquivos baixados.
 
