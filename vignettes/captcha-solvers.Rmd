@@ -1,0 +1,40 @@
+---
+title: "Solvers de CAPTCHA"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Solvers de CAPTCHA}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```
+
+Todo solver recebe o caminho de um PNG e deve devolver exatamente cinco
+caracteres alfanuméricos. A interface permite integrar um serviço ou rotina
+própria sem adicionar dependências ao núcleo:
+
+```{r}
+solver <- rsicar::sicar_solver_function(function(path) {
+  # Substitua pela sua implementação de leitura do CAPTCHA.
+  "ABCDE"
+})
+rsicar::sicar_client(solver = solver)
+```
+
+O solver manual é adequado para sessões interativas:
+
+```r
+rsicar::sicar_solver_manual()
+```
+
+O solver Tesseract é opcional e experimental. Ele exige os pacotes R `magick` e
+`tesseract`, além da instalação de Tesseract no sistema:
+
+```r
+solver <- rsicar::sicar_solver_tesseract()
+```
+
+Saídas vazias, inválidas ou com comprimento diferente de cinco geram um erro
+estruturado, em vez de serem enviadas ao endpoint de download.

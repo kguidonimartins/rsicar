@@ -11,3 +11,5 @@
   failure reporting.
 * Added bounded exponential backoff with jitter for retryable download failures;
   permanent validation and solver errors now stop immediately.
+* Added Portuguese README/vignettes, pkgdown configuration, cross-platform CI,
+  and opt-in live contract tests.

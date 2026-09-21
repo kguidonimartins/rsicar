@@ -1,0 +1,21 @@
+url: https://kguidonimartins.github.io/rsicar
+
+template:
+  bootstrap: 5
+
+reference:
+  - title: Client and domain
+    contents:
+      - sicar_client
+      - sicar_states
+      - sicar_polygon_types
+  - title: Release dates and downloads
+    contents:
+      - sicar_release_dates
+      - sicar_download_state
+      - sicar_download_country
+  - title: CAPTCHA solvers
+    contents:
+      - sicar_solver_function
+      - sicar_solver_manual
+      - sicar_solver_tesseract
