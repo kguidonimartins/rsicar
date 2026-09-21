@@ -2,7 +2,7 @@
 % Please edit documentation in R/download.R
 \name{sicar_download_state}
 \alias{sicar_download_state}
-\title{Download one SICAR polygon archive}
+\title{Download one or more SICAR polygon archives for a state}
 \usage{
 sicar_download_state(
   client,
@@ -21,16 +21,17 @@ sicar_download_state(
 
 \item{state}{Brazilian state abbreviation, case-insensitive.}
 
-\item{polygon}{SICAR polygon type, case-insensitive.}
+\item{polygon}{One or more SICAR polygon types, case-insensitive. All
+values are validated before any download starts.}
 
 \item{dest_dir}{Destination directory.}
 
 \item{overwrite}{Whether to replace an existing validated archive.}
 
-\item{tries}{Maximum number of attempts. Most failed attempts are just a
-wrong CAPTCHA guess or an expired session, both retried within a couple
-of seconds, so a solver well under 100\% accuracy (such as
-\code{sicar_solver_tesseract()}) still needs a generous budget to
+\item{tries}{Maximum number of attempts per polygon. Most failed attempts
+are just a wrong CAPTCHA guess or an expired session, both retried
+within a couple of seconds, so a solver well under 100\% accuracy (such
+as \code{sicar_solver_tesseract()}) still needs a generous budget to
 automatically land a correct answer; this matches the default used by
 the upstream Python client.}
 
@@ -41,14 +42,22 @@ the upstream Python client.}
 \item{attempt_download}{Internal dependency-injection hook.}
 }
 \value{
-The normalized path of the downloaded ZIP archive.
+The normalized path of the downloaded ZIP archive. When \code{polygon}
+has more than one value, a character vector of paths named by polygon
+type.
 }
 \description{
-Download one SICAR polygon archive
+Download one or more SICAR polygon archives for a state
 }
 \examples{
 \dontrun{
 client <- sicar_client(solver = sicar_solver_manual())
 sicar_download_state(client, "PA", "APPS", dest_dir = "SICAR/PA")
+sicar_download_state(
+  client,
+  "PA",
+  c("APPS", "RESERVA_LEGAL"),
+  dest_dir = "SICAR/PA"
+)
 }
 }

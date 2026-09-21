@@ -35,3 +35,31 @@ test_that("invalid domain values have structured errors", {
     class = "rsicar_invalid_argument"
   )
 })
+
+test_that("polygon validation accepts and normalizes multiple values", {
+  expect_identical(
+    rsicar:::.sicar_validate_polygon(
+      c(" apps ", "reserva_legal"),
+      multiple = TRUE
+    ),
+    c("APPS", "RESERVA_LEGAL")
+  )
+  expect_identical(
+    rsicar:::.sicar_validate_polygon(c("apps", "apps"), multiple = TRUE),
+    "APPS"
+  )
+})
+
+test_that("multiple polygon validation rejects unknown values upfront", {
+  expect_error(
+    rsicar:::.sicar_validate_polygon(
+      c("apps", "unknown"),
+      multiple = TRUE
+    ),
+    class = "rsicar_invalid_argument"
+  )
+  expect_error(
+    rsicar:::.sicar_validate_polygon(character(0), multiple = TRUE),
+    class = "rsicar_invalid_argument"
+  )
+})

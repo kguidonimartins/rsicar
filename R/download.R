@@ -147,78 +147,17 @@
   max(0, min(2, random() * 2))
 }
 
-#' Download one SICAR polygon archive
-#'
-#' @param client An object created by [sicar_client()].
-#' @param state Brazilian state abbreviation, case-insensitive.
-#' @param polygon SICAR polygon type, case-insensitive.
-#' @param dest_dir Destination directory.
-#' @param overwrite Whether to replace an existing validated archive.
-#' @param tries Maximum number of attempts. Most failed attempts are just a
-#'   wrong CAPTCHA guess or an expired session, both retried within a couple
-#'   of seconds, so a solver well under 100% accuracy (such as
-#'   `sicar_solver_tesseract()`) still needs a generous budget to
-#'   automatically land a correct answer; this matches the default used by
-#'   the upstream Python client.
-#' @param wait Internal sleep function used between retry attempts.
-#' @param random Internal jitter function used to calculate retry delays.
-#' @param attempt_download Internal dependency-injection hook.
-#' @returns The normalized path of the downloaded ZIP archive.
-#' @examples
-#' \dontrun{
-#' client <- sicar_client(solver = sicar_solver_manual())
-#' sicar_download_state(client, "PA", "APPS", dest_dir = "SICAR/PA")
-#' }
-#' @importFrom stats runif
-#' @export
-sicar_download_state <- function(
+.sicar_download_state_polygon <- function(
   client,
   state,
   polygon,
   dest_dir,
-  overwrite = FALSE,
-  tries = 25,
-  wait = Sys.sleep,
-  random = function() runif(1),
-  attempt_download = .sicar_attempt_download
+  overwrite,
+  tries,
+  wait,
+  random,
+  attempt_download
 ) {
-  if (!inherits(client, "sicar_client")) {
-    .sicar_abort(
-      "`client` must be created by `sicar_client()`.",
-      "rsicar_invalid_argument"
-    )
-  }
-  state <- .sicar_validate_state(state)
-  polygon <- .sicar_validate_polygon(polygon)
-  if (length(dest_dir) != 1L || !is.character(dest_dir) || is.na(dest_dir)) {
-    .sicar_abort(
-      "`dest_dir` must be one non-missing path.",
-      "rsicar_invalid_argument"
-    )
-  }
-  if (length(tries) != 1L || !is.numeric(tries) || is.na(tries) || tries < 1) {
-    .sicar_abort(
-      "`tries` must be a positive number.",
-      "rsicar_invalid_argument"
-    )
-  }
-  if (
-    !is.function(wait) || !is.function(random) || !is.function(attempt_download)
-  ) {
-    .sicar_abort(
-      "`wait`, `random`, and `attempt_download` must be functions.",
-      "rsicar_invalid_argument"
-    )
-  }
-  if (length(overwrite) != 1L || is.na(overwrite) || !is.logical(overwrite)) {
-    .sicar_abort(
-      "`overwrite` must be TRUE or FALSE.",
-      "rsicar_invalid_argument"
-    )
-  }
-
-  dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
-  .sicar_bootstrap(client)
   final_path <- file.path(dest_dir, paste0(state, "_", polygon, ".zip"))
   if (file.exists(final_path) && !overwrite) {
     .sicar_validate_zip(final_path)
@@ -265,6 +204,109 @@ sicar_download_state <- function(
       slow = .sicar_slow_retry(last_error)
     ))
   }
+}
+
+#' Download one or more SICAR polygon archives for a state
+#'
+#' @param client An object created by [sicar_client()].
+#' @param state Brazilian state abbreviation, case-insensitive.
+#' @param polygon One or more SICAR polygon types, case-insensitive. All
+#'   values are validated before any download starts.
+#' @param dest_dir Destination directory.
+#' @param overwrite Whether to replace an existing validated archive.
+#' @param tries Maximum number of attempts per polygon. Most failed attempts
+#'   are just a wrong CAPTCHA guess or an expired session, both retried
+#'   within a couple of seconds, so a solver well under 100% accuracy (such
+#'   as `sicar_solver_tesseract()`) still needs a generous budget to
+#'   automatically land a correct answer; this matches the default used by
+#'   the upstream Python client.
+#' @param wait Internal sleep function used between retry attempts.
+#' @param random Internal jitter function used to calculate retry delays.
+#' @param attempt_download Internal dependency-injection hook.
+#' @returns The normalized path of the downloaded ZIP archive. When `polygon`
+#'   has more than one value, a character vector of paths named by polygon
+#'   type.
+#' @examples
+#' \dontrun{
+#' client <- sicar_client(solver = sicar_solver_manual())
+#' sicar_download_state(client, "PA", "APPS", dest_dir = "SICAR/PA")
+#' sicar_download_state(
+#'   client,
+#'   "PA",
+#'   c("APPS", "RESERVA_LEGAL"),
+#'   dest_dir = "SICAR/PA"
+#' )
+#' }
+#' @importFrom stats runif
+#' @export
+sicar_download_state <- function(
+  client,
+  state,
+  polygon,
+  dest_dir,
+  overwrite = FALSE,
+  tries = 25,
+  wait = Sys.sleep,
+  random = function() runif(1),
+  attempt_download = .sicar_attempt_download
+) {
+  if (!inherits(client, "sicar_client")) {
+    .sicar_abort(
+      "`client` must be created by `sicar_client()`.",
+      "rsicar_invalid_argument"
+    )
+  }
+  state <- .sicar_validate_state(state)
+  polygon <- .sicar_validate_polygon(polygon, multiple = TRUE)
+  if (length(dest_dir) != 1L || !is.character(dest_dir) || is.na(dest_dir)) {
+    .sicar_abort(
+      "`dest_dir` must be one non-missing path.",
+      "rsicar_invalid_argument"
+    )
+  }
+  if (length(tries) != 1L || !is.numeric(tries) || is.na(tries) || tries < 1) {
+    .sicar_abort(
+      "`tries` must be a positive number.",
+      "rsicar_invalid_argument"
+    )
+  }
+  if (
+    !is.function(wait) || !is.function(random) || !is.function(attempt_download)
+  ) {
+    .sicar_abort(
+      "`wait`, `random`, and `attempt_download` must be functions.",
+      "rsicar_invalid_argument"
+    )
+  }
+  if (length(overwrite) != 1L || is.na(overwrite) || !is.logical(overwrite)) {
+    .sicar_abort(
+      "`overwrite` must be TRUE or FALSE.",
+      "rsicar_invalid_argument"
+    )
+  }
+
+  dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
+  .sicar_bootstrap(client)
+
+  paths <- vapply(
+    polygon,
+    function(one_polygon) {
+      .sicar_download_state_polygon(
+        client,
+        state,
+        one_polygon,
+        dest_dir,
+        overwrite,
+        tries,
+        wait,
+        random,
+        attempt_download
+      )
+    },
+    character(1)
+  )
+
+  if (length(paths) == 1L) unname(paths) else paths
 }
 
 #' Download one SICAR polygon archive for every Brazilian state

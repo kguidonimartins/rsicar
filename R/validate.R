@@ -1,7 +1,17 @@
-.sicar_normalize_choice <- function(value, allowed, field) {
-  if (length(value) != 1L || is.na(value) || !is.character(value)) {
+.sicar_normalize_choice <- function(value, allowed, field, multiple = FALSE) {
+  if (
+    length(value) < 1L ||
+      (!multiple && length(value) != 1L) ||
+      anyNA(value) ||
+      !is.character(value)
+  ) {
+    message <- if (multiple) {
+      sprintf("`%s` must be one or more non-missing character values.", field)
+    } else {
+      sprintf("`%s` must be a single non-missing character value.", field)
+    }
     .sicar_abort(
-      sprintf("`%s` must be a single non-missing character value.", field),
+      message,
       "rsicar_invalid_argument",
       field = field,
       value = value
@@ -9,9 +19,14 @@
   }
 
   normalized <- toupper(trimws(value))
-  if (!normalized %in% allowed) {
+  unknown <- unique(normalized[!normalized %in% allowed])
+  if (length(unknown) > 0L) {
     .sicar_abort(
-      sprintf("Unknown %s `%s`.", field, value),
+      sprintf(
+        "Unknown %s %s.",
+        field,
+        paste0("`", unknown, "`", collapse = ", ")
+      ),
       "rsicar_invalid_argument",
       field = field,
       value = value,
@@ -19,7 +34,7 @@
     )
   }
 
-  normalized
+  if (multiple) unique(normalized) else normalized
 }
 
 #' List the accepted Brazilian state abbreviations
@@ -46,6 +61,6 @@ sicar_polygon_types <- function() {
   .sicar_normalize_choice(state, .sicar_states, "state")
 }
 
-.sicar_validate_polygon <- function(polygon) {
-  .sicar_normalize_choice(polygon, .sicar_polygons, "polygon")
+.sicar_validate_polygon <- function(polygon, multiple = FALSE) {
+  .sicar_normalize_choice(polygon, .sicar_polygons, "polygon", multiple = multiple)
 }
