@@ -4,7 +4,7 @@ R := Rscript --no-init-file
 PKGNAME := $(shell sed -n "s/^Package: *\([^ ]*\)/\1/p" DESCRIPTION 2>/dev/null)
 PKGVERS := $(shell sed -n "s/^Version: *\([^ ]*\)/\1/p" DESCRIPTION 2>/dev/null)
 
-.PHONY: help require-package install_deps document format tests examples build \
+.PHONY: help require-package install_deps document format tests test examples build \
 	check check-cran install quick-install clean render site live-tests all
 
 require-package:
@@ -23,6 +23,8 @@ format: ## format R, R Markdown, and Quarto files with air
 
 tests: require-package ## run the offline test suite
 	$(R) -e "Sys.setenv(TESTTHAT_MAX_FAILS = Inf); devtools::test()" 2>&1 | tee out-testthat.txt
+
+test: tests ## alias for the offline test suite
 
 examples: require-package document ## run package examples, excluding dontrun examples
 	$(R) -e "devtools::run_examples(run_donttest = TRUE)" 2>&1 | tee out-examples.txt

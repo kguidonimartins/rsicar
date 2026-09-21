@@ -28,6 +28,9 @@
 ^out-testthat\.txt$
 ^out-gp\.txt$
 ^out-eg\.txt$
+^TODO\.md$
+^test\.R$
+^\.git$
 ^cran-comments\.md$
 ^CRAN-SUBMISSION$
 ^data-raw$
