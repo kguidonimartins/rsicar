@@ -86,7 +86,9 @@ sicar_download_status("SICAR/PA")
 Para selecionar as geometrias que tocam um ou mais municípios a partir dos ZIPs
 já baixados, resolva os municípios pelos nomes ou códigos IBGE e passe um ZIP
 ou uma pasta de origem. A função retorna um objeto `sf` sem recortar as
-geometrias e sem gravar arquivos automaticamente:
+geometrias e sem gravar arquivos automaticamente. Na primeira extração, a
+malha municipal de 2025 é baixada pelo pacote opcional `geobr` e armazenada no
+cache local do usuário; as chamadas seguintes reutilizam esse cache:
 
 ```r
 sicar_resolve_municipality(c("Recife", "Olinda", "Paulista/PE"))

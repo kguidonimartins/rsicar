@@ -10,9 +10,9 @@
 
 .sicar_municipality_catalog <- function() {
   data.frame(
-    code_muni = as.character(sicar_municipalities$code_muni),
-    name_muni = as.character(sicar_municipalities$name_muni),
-    abbrev_state = as.character(sicar_municipalities$abbrev_state),
+    code_muni = as.character(sicar_municipality_lookup$code_muni),
+    name_muni = as.character(sicar_municipality_lookup$name_muni),
+    abbrev_state = as.character(sicar_municipality_lookup$abbrev_state),
     stringsAsFactors = FALSE
   )
 }

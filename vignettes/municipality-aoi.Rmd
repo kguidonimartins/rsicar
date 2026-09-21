@@ -14,7 +14,9 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 O SICAR disponibiliza os dados para download por estado e tema, não por
 município. Depois de baixar os ZIPs com `sicar_download_state()` ou
 `sicar_download_country()`, `sicar_extract_municipality()` permite selecionar
-as feições que tocam os municípios de interesse.
+as feições que tocam os municípios de interesse. O pacote inclui somente um
+lookup tabular para resolver os nomes; na primeira extração, a malha geométrica
+de 2025 é baixada pelo `geobr` e armazenada no cache local do usuário.
 
 ## Resolver municípios
 

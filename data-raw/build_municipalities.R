@@ -1,9 +1,10 @@
-# Build the bundled municipality geometry catalog used by
-# `sicar_resolve_municipality()` and `sicar_extract_municipality()`.
+# Build the bundled municipality lookup used by
+# `sicar_resolve_municipality()`. Full municipality geometries are downloaded
+# lazily by `sicar_extract_municipality()` and are not bundled in the package.
 #
 # Source: geobr 2.0.1, `read_municipality(year = 2025,
-# simplified = FALSE)`. This script is run when the bundled reference data is
-# intentionally refreshed; package users do not need geobr at runtime.
+# simplified = FALSE)`. This script is run when the bundled lookup is
+# intentionally refreshed; package users need geobr only for extraction.
 
 municipalities <- geobr::read_municipality(
   year = 2025,
@@ -31,16 +32,17 @@ if (is.null(sf::st_crs(municipalities))) {
   stop("The geobr municipality data has no CRS.", call. = FALSE)
 }
 
-sicar_municipalities <- municipalities[required]
-sicar_municipalities$code_muni <- sprintf(
-  "%07.0f",
-  as.numeric(sicar_municipalities$code_muni)
+municipality_lookup <- data.frame(
+  code_muni = sprintf("%07.0f", as.numeric(municipalities$code_muni)),
+  name_muni = as.character(municipalities$name_muni),
+  abbrev_state = as.character(municipalities$abbrev_state),
+  stringsAsFactors = FALSE
 )
 
 if (
-  anyNA(sicar_municipalities$code_muni) ||
-    any(nchar(sicar_municipalities$code_muni) != 7L) ||
-    anyDuplicated(sicar_municipalities$code_muni)
+  anyNA(municipality_lookup$code_muni) ||
+    any(nchar(municipality_lookup$code_muni) != 7L) ||
+    anyDuplicated(municipality_lookup$code_muni)
 ) {
   stop(
     "The geobr municipality codes are not unique seven-digit values.",
@@ -48,8 +50,9 @@ if (
   )
 }
 
+sicar_municipality_lookup <- municipality_lookup
 save(
-  sicar_municipalities,
+  sicar_municipality_lookup,
   file = file.path("R", "sysdata.rda"),
   compress = "xz"
 )

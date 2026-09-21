@@ -104,22 +104,19 @@ sicar_resolve_municipality("araçoiaba/PE")
 - [x] Criar um script reprodutível em `data-raw/` que execute
   `geobr::read_municipality(year = 2025, simplified = FALSE)` com progresso
   desativado durante a geração do artefato.
-- [x] Manter no artefato somente as colunas necessárias para resolução e
-  interseção, preservando os códigos IBGE como texto de sete dígitos, os nomes,
-  as UFs e a coluna de geometria.
+- [x] Manter no artefato integrado somente as colunas tabulares necessárias para
+  resolução, preservando os códigos IBGE como texto de sete dígitos, os nomes e
+  as UFs; a geometria completa não é versionada.
 - [x] Registrar no script e na documentação a fonte `geobr`, o ano de
   referência, a data/versão usada para gerar o artefato, o CRS e qualquer
   transformação aplicada.
-- [x] Escolher e justificar o armazenamento como dado interno do pacote
-  (`R/sysdata.rda`) ou como dataset do pacote (`data/*.rda`), seguindo a
-  distinção de dados internos e dados disponíveis ao usuário em
-  <https://r-pkgs.org/data.html>.
-- [x] Medir o tamanho comprimido do artefato, verificar o impacto no tamanho do
-  pacote e testar que ele é carregado com `devtools::load_all()` e após a
-  instalação. O artefato comprimido ocupa aproximadamente 103 MB e o pacote
-  instalado aproximadamente 122 MB.
-- [x] Não baixar a malha do `geobr` em tempo de execução: a função pública deve
-  usar o artefato integrado e determinístico.
+- [x] Armazenar o lookup tabular como dado interno em `R/sysdata.rda`; a malha
+  geométrica completa é baixada somente durante a extração e fica em cache no
+  diretório de dados do usuário.
+- [x] Medir o tamanho comprimido do artefato e verificar que o lookup ocupa
+  aproximadamente 38 KB; a malha de 2025 não é incluída no pacote.
+- [x] Não baixar a malha do `geobr` durante a resolução de nomes: a função de
+  extração faz o download sob demanda e reutiliza o cache local.
 
 ## [x] 4 — Implementar o resolvedor municipal
 
@@ -190,9 +187,8 @@ sicar_resolve_municipality("araçoiaba/PE")
 ## [x] 8 — Finalizar documentação, pacote e critérios de aceite
 
 - [x] Atualizar `DESCRIPTION` com as dependências corretas, mantendo `sf` e
-  demais dependências pesadas opcionais quando possível; `geobr` deve ser
-  necessário para regenerar o artefato, não para a consulta em tempo de
-  execução.
+  demais dependências pesadas opcionais quando possível; `geobr` é necessário
+  em tempo de execução somente para a extração da malha geométrica.
 - [x] Adicionar documentação roxygen, referências cruzadas, exemplos offline,
   vignette de fluxo download → AOI e entrada pública no `_pkgdown.yml`.
 - [x] Atualizar `README.Rmd`, `NEWS.md` e, quando a API estiver fechada, o
@@ -206,13 +202,14 @@ sicar_resolve_municipality("araçoiaba/PE")
 
 ## [x] 9 — Registrar dependências e pontos de atenção
 
-- `geobr::read_municipality()` será usado na geração dos dados integrados, com
-  `year = 2025` e `simplified = FALSE`.
+- `geobr::read_municipality()` é usado na geração do lookup e no download sob
+  demanda da malha geométrica, sempre com `year = 2025` e `simplified = FALSE`.
 - `sf` será usado em tempo de execução para leitura, transformação, interseção
   e escrita; a posição em `Imports` ou `Suggests` deve ser decidida conforme a
   política final de dependências do pacote.
-- A geração da malha pode exigir rede e versões específicas de `geobr`, mas
-  isso não pode tornar a resolução ou os testes padrão dependentes de rede.
+- A geração do lookup e o primeiro uso da extração podem exigir rede e versões
+  específicas de `geobr`, mas isso não torna a resolução ou os testes padrão
+  dependentes de rede.
 - O comportamento de limites compartilhados e a deduplicação são importantes:
   `st_intersects()` considera contato de fronteira, exatamente como requerido,
   e a saída não deve multiplicar uma feição apenas porque ela atende a vários

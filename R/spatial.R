@@ -176,8 +176,9 @@ sicar_extract_municipality <- function(x, src_dir) {
   .sicar_require_sf()
   codes <- sicar_resolve_municipality(x)
   source_paths <- .sicar_source_files(src_dir)
-  municipalities <- sicar_municipalities[
-    sicar_municipalities$code_muni %in% codes,
+  municipalities <- .sicar_municipality_geometries()
+  municipalities <- municipalities[
+    municipalities$code_muni %in% codes,
     ,
     drop = FALSE
   ]

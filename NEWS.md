@@ -1,5 +1,8 @@
 # rsicar 0.0.0.9000
 
+* `sicar_extract_municipality()` now downloads the 2025 municipality geometry
+  reference only on first extraction and reuses a local cache, keeping the
+  large spatial dataset out of the installed package.
 * Added `sicar_extract_municipality()` and `sicar_resolve_municipality()` for
   resolving IBGE municipality codes and selecting complete SICAR geometries
   that intersect one or more municipalities.

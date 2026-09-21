@@ -25,9 +25,27 @@ make_source_zip <- function(
   archive
 }
 
+test_municipality_geometries <- function() {
+  square <- function(xmin, xmax) {
+    sf::st_polygon(list(rbind(
+      c(xmin, 0),
+      c(xmax, 0),
+      c(xmax, 1),
+      c(xmin, 1),
+      c(xmin, 0)
+    )))
+  }
+  sf::st_sf(
+    code_muni = c("2611606", "2609600"),
+    name_muni = c("Recife", "Olinda"),
+    abbrev_state = c("PE", "PE"),
+    geometry = sf::st_sfc(square(0, 1), square(1, 2), crs = 4674)
+  )
+}
+
 recife_bbox <- function() {
-  municipality <- rsicar:::sicar_municipalities[
-    rsicar:::sicar_municipalities$code_muni == "2611606",
+  municipality <- test_municipality_geometries()[
+    test_municipality_geometries()$code_muni == "2611606",
     ,
     drop = FALSE
   ]
@@ -35,6 +53,10 @@ recife_bbox <- function() {
 }
 
 test_that("extraction preserves complete intersecting geometries", {
+  testthat::local_mocked_bindings(
+    .sicar_municipality_geometries = test_municipality_geometries,
+    .package = "rsicar"
+  )
   bbox <- recife_bbox()
   crossing <- sf::st_as_sfc(bbox)
   outside <- sf::st_polygon(list(rbind(
@@ -60,6 +82,10 @@ test_that("extraction preserves complete intersecting geometries", {
 })
 
 test_that("boundary contact is included by st_intersects", {
+  testthat::local_mocked_bindings(
+    .sicar_municipality_geometries = test_municipality_geometries,
+    .package = "rsicar"
+  )
   bbox <- recife_bbox()
   touching <- sf::st_polygon(list(rbind(
     c(bbox[["xmin"]] - 1, bbox[["ymin"]]),
@@ -80,6 +106,10 @@ test_that("boundary contact is included by st_intersects", {
 })
 
 test_that("empty selections retain the source schema and CRS", {
+  testthat::local_mocked_bindings(
+    .sicar_municipality_geometries = test_municipality_geometries,
+    .package = "rsicar"
+  )
   source <- sf::st_sf(
     id = "outside",
     label = "not selected",
@@ -105,6 +135,10 @@ test_that("empty selections retain the source schema and CRS", {
 })
 
 test_that("municipality CRS is transformed to the source CRS", {
+  testthat::local_mocked_bindings(
+    .sicar_municipality_geometries = test_municipality_geometries,
+    .package = "rsicar"
+  )
   bbox <- recife_bbox()
   source <- sf::st_sf(
     id = "crossing",
@@ -119,9 +153,13 @@ test_that("municipality CRS is transformed to the source CRS", {
 })
 
 test_that("multiple source ZIPs and municipalities are combined once", {
+  testthat::local_mocked_bindings(
+    .sicar_municipality_geometries = test_municipality_geometries,
+    .package = "rsicar"
+  )
   first_bbox <- recife_bbox()
-  second <- rsicar:::sicar_municipalities[
-    rsicar:::sicar_municipalities$code_muni == "2609600",
+  second <- test_municipality_geometries()[
+    test_municipality_geometries()$code_muni == "2609600",
     ,
     drop = FALSE
   ]
@@ -149,6 +187,10 @@ test_that("multiple source ZIPs and municipalities are combined once", {
 })
 
 test_that("source archives without shapefiles are rejected", {
+  testthat::local_mocked_bindings(
+    .sicar_municipality_geometries = test_municipality_geometries,
+    .package = "rsicar"
+  )
   root <- withr::local_tempdir()
   text_path <- file.path(root, "source.txt")
   writeLines("fixture", text_path)
@@ -162,6 +204,10 @@ test_that("source archives without shapefiles are rejected", {
 })
 
 test_that("source shapefiles without a CRS are rejected", {
+  testthat::local_mocked_bindings(
+    .sicar_municipality_geometries = test_municipality_geometries,
+    .package = "rsicar"
+  )
   source <- sf::st_sf(
     id = "missing-crs",
     geometry = sf::st_sfc(sf::st_point(c(0, 0)), crs = 4674)
@@ -179,6 +225,10 @@ test_that("source shapefiles without a CRS are rejected", {
 })
 
 test_that("invalid source geometries are rejected", {
+  testthat::local_mocked_bindings(
+    .sicar_municipality_geometries = test_municipality_geometries,
+    .package = "rsicar"
+  )
   invalid <- sf::st_polygon(list(rbind(
     c(0, 0),
     c(1, 1),

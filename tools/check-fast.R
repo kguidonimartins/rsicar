@@ -18,14 +18,14 @@ if (!requireNamespace("sf", quietly = TRUE)) {
   stop("Install the 'sf' package to run check-fast.", call. = FALSE)
 }
 
-sicar_municipalities <- sf::st_sf(
+sicar_municipality_lookup <- data.frame(
   code_muni = "0000001",
   name_muni = "Development Fixture",
   abbrev_state = "XX",
-  geometry = sf::st_sfc(sf::st_point(c(0, 0)), crs = 4674)
+  stringsAsFactors = FALSE
 )
 save(
-  sicar_municipalities,
+  sicar_municipality_lookup,
   file = file.path(temporary_path, "R", "sysdata.rda"),
   compress = "xz"
 )

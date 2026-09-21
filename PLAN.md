@@ -129,11 +129,13 @@ Superfície pública inicial:
 - `sicar_solver_tesseract()`, `sicar_solver_manual()` e
   `sicar_solver_function(fn)`: implementam uma interface comum de CAPTCHA.
 - `sicar_resolve_municipality(x, uf, strict)`: resolve nomes, códigos IBGE,
-  UFs e identificadores `Municipio/UF` usando a malha municipal de 2025
-  integrada ao pacote;
+  UFs e identificadores `Municipio/UF` usando o lookup tabular municipal de
+  2025 integrado ao pacote;
 - `sicar_extract_municipality(x, src_dir)`: lê um ZIP ou todos os ZIPs de uma
   pasta, seleciona com `sf::st_intersects()` as feições SICAR que tocam os
-  municípios solicitados e retorna um objeto `sf` sem gravar arquivos.
+  municípios solicitados e retorna um objeto `sf` sem gravar arquivos. No
+  primeiro uso, baixa a malha geométrica completa de 2025 pelo `geobr` e a
+  armazena no cache do usuário para as extrações seguintes.
 
 Decisões de comportamento:
 
