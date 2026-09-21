@@ -48,12 +48,22 @@ sicar_client <- function(
     )
   }
 
+  state <- new.env(parent = emptyenv())
+  state$cookie_jar <- tempfile("rsicar-cookies-", fileext = ".txt")
+  state$bootstrapped <- FALSE
+  reg.finalizer(
+    state,
+    function(environment) unlink(environment$cookie_jar),
+    onexit = TRUE
+  )
+
   structure(
     list(
       solver = solver,
       headers = headers,
       timeout = timeout,
-      urls = .sicar_urls
+      urls = .sicar_urls,
+      state = state
     ),
     class = "sicar_client"
   )

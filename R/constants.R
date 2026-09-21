@@ -48,3 +48,13 @@
   recaptcha = "https://consultapublica.car.gov.br/publico/municipios/ReCaptcha",
   release_date = "https://consultapublica.car.gov.br/publico/estados/downloads"
 )
+
+.sicar_default_headers <- c(
+  `User-Agent` = paste(
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+    "AppleWebKit/537.36 (KHTML, like Gecko)",
+    "Chrome/122.0.0.0 Safari/537.36"
+  ),
+  Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+  Connection = "close"
+)

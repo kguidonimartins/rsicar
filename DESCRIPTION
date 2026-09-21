@@ -12,7 +12,9 @@ License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 Imports:
-    rlang
+    httr2,
+    rlang,
+    xml2
 Suggests:
     devtools,
     testthat (>= 3.0.0),

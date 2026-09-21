@@ -2,6 +2,7 @@
 
 export(sicar_client)
 export(sicar_polygon_types)
+export(sicar_release_dates)
 export(sicar_solver_function)
 export(sicar_solver_manual)
 export(sicar_states)
