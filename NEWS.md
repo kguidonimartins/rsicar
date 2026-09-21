@@ -6,3 +6,6 @@
   response validation, and defensive HTML date parsing.
 * Added `sicar_solver_tesseract()` as an optional, experimental CAPTCHA solver;
   manual and user-defined solvers remain available without OCR dependencies.
+* Added `sicar_download_state()` and `sicar_download_country()` with ZIP
+  validation, safe temporary files, resumable existing outputs, and per-state
+  failure reporting.
