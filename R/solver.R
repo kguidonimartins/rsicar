@@ -6,7 +6,8 @@
   if (length(value) != 1L || is.na(value) || !is.character(value)) {
     .sicar_abort(
       "A CAPTCHA solver must return one non-missing character value.",
-      "rscicar_solver_error"
+      "rscicar_solver_error",
+      retryable = TRUE
     )
   }
   value <- toupper(trimws(value))
@@ -14,7 +15,8 @@
     .sicar_abort(
       "A CAPTCHA solver must return exactly five alphanumeric characters.",
       "rscicar_solver_error",
-      value = value
+      value = value,
+      retryable = TRUE
     )
   }
   value

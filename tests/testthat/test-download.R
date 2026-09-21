@@ -35,7 +35,9 @@ test_that("country downloads preserve one result row per state", {
     polygon,
     dest_dir,
     overwrite,
-    tries
+    tries,
+    wait,
+    random
   ) {
     calls <<- c(calls, state)
     if (state == "PA") {
@@ -67,6 +69,72 @@ test_that("country downloads preserve one result row per state", {
   expect_length(calls, 27)
   expect_length(result$state, 27)
   expect_identical(result$status[result$state == "PA"], "failed")
+})
+
+test_that("retryable download failures use bounded jitter without real sleep", {
+  client <- sicar_client()
+  client$state$bootstrapped <- TRUE
+  destination <- withr::local_tempdir()
+  attempts <- 0L
+  delays <- numeric()
+  fake_attempt <- function(client, state, polygon, dest_dir) {
+    attempts <<- attempts + 1L
+    if (attempts == 1L) {
+      rlang::abort(
+        "temporary service failure",
+        class = "rscicar_download_error",
+        retryable = TRUE
+      )
+    }
+    fixture <- file.path(dest_dir, "temporary.zip")
+    source <- tempfile(fileext = ".txt")
+    writeLines("fixture", source)
+    utils::zip(fixture, source, flags = "-q")
+    fixture
+  }
+
+  result <- sicar_download_state(
+    client,
+    "PA",
+    "APPS",
+    destination,
+    tries = 2,
+    wait = function(seconds) delays <<- c(delays, seconds),
+    random = function() 0.25,
+    attempt_download = fake_attempt
+  )
+
+  expect_true(file.exists(result))
+  expect_identical(attempts, 2L)
+  expect_identical(delays, 1.25)
+})
+
+test_that("non-retryable download failures stop immediately", {
+  client <- sicar_client()
+  client$state$bootstrapped <- TRUE
+  attempts <- 0L
+  fake_attempt <- function(client, state, polygon, dest_dir) {
+    attempts <<- attempts + 1L
+    rlang::abort(
+      "invalid archive",
+      class = "rscicar_download_error",
+      retryable = FALSE
+    )
+  }
+
+  expect_error(
+    sicar_download_state(
+      client,
+      "PA",
+      "APPS",
+      withr::local_tempdir(),
+      tries = 5,
+      wait = function(seconds) stop("wait should not be called"),
+      attempt_download = fake_attempt
+    ),
+    class = "rscicar_download_error"
+  )
+  expect_identical(attempts, 1L)
 })
 
 test_that("state downloads validate and atomically rename a ZIP", {

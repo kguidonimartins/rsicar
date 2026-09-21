@@ -21,7 +21,8 @@
         sprintf("Request to `%s` failed: %s", url, conditionMessage(error)),
         "rscicar_http_error",
         parent = error,
-        url = url
+        url = url,
+        retryable = TRUE
       )
     }
   )
@@ -45,7 +46,8 @@
       "rscicar_http_error",
       url = url,
       status = actual_status,
-      expected_status = status
+      expected_status = status,
+      retryable = actual_status %in% c(408, 429, 500, 502, 503, 504)
     )
   }
 
@@ -62,7 +64,8 @@
         "rscicar_http_error",
         url = url,
         content_type = actual_type,
-        expected_content_type = content_type
+        expected_content_type = content_type,
+        retryable = FALSE
       )
     }
   }

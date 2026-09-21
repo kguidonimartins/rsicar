@@ -70,7 +70,8 @@
         "rscicar_download_error",
         parent = error,
         url = url,
-        path = path
+        path = path,
+        retryable = TRUE
       )
     }
   )
@@ -98,6 +99,15 @@
   temporary
 }
 
+.sicar_retryable <- function(error) {
+  isTRUE(error$retryable)
+}
+
+.sicar_retry_delay <- function(attempt, random) {
+  base <- min(60, 2^(attempt - 1))
+  base + max(0, min(1, random()))
+}
+
 #' Download one SICAR polygon archive
 #'
 #' @param client An object created by [sicar_client()].
@@ -106,6 +116,9 @@
 #' @param dest_dir Destination directory.
 #' @param overwrite Whether to replace an existing validated archive.
 #' @param tries Maximum number of attempts.
+#' @param wait Internal sleep function used between retry attempts.
+#' @param random Internal jitter function used to calculate retry delays.
+#' @param attempt_download Internal dependency-injection hook.
 #' @returns The normalized path of the downloaded ZIP archive.
 #' @export
 sicar_download_state <- function(
@@ -114,7 +127,10 @@ sicar_download_state <- function(
   polygon,
   dest_dir,
   overwrite = FALSE,
-  tries = 3
+  tries = 3,
+  wait = Sys.sleep,
+  random = function() runif(1),
+  attempt_download = .sicar_attempt_download
 ) {
   if (!inherits(client, "sicar_client")) {
     .sicar_abort(
@@ -136,6 +152,14 @@ sicar_download_state <- function(
       "rscicar_invalid_argument"
     )
   }
+  if (
+    !is.function(wait) || !is.function(random) || !is.function(attempt_download)
+  ) {
+    .sicar_abort(
+      "`wait`, `random`, and `attempt_download` must be functions.",
+      "rscicar_invalid_argument"
+    )
+  }
   if (length(overwrite) != 1L || is.na(overwrite) || !is.logical(overwrite)) {
     .sicar_abort(
       "`overwrite` must be TRUE or FALSE.",
@@ -154,7 +178,7 @@ sicar_download_state <- function(
   last_error <- NULL
   for (attempt in seq_len(as.integer(tries))) {
     result <- tryCatch(
-      .sicar_attempt_download(client, state, polygon, dest_dir),
+      attempt_download(client, state, polygon, dest_dir),
       error = function(error) {
         last_error <<- error
         NULL
@@ -174,6 +198,18 @@ sicar_download_state <- function(
       }
       return(normalizePath(final_path, mustWork = TRUE))
     }
+    if (!.sicar_retryable(last_error) || attempt == as.integer(tries)) {
+      .sicar_abort(
+        sprintf("Download failed on attempt %d.", attempt),
+        "rscicar_download_error",
+        state = state,
+        polygon = polygon,
+        attempt = attempt,
+        parent = last_error,
+        retryable = FALSE
+      )
+    }
+    wait(.sicar_retry_delay(attempt, random))
   }
 
   .sicar_abort(
@@ -195,6 +231,8 @@ sicar_download_state <- function(
 #' @param tries Maximum number of attempts per state.
 #' @param download_state Internal dependency-injection hook; leave at its
 #'   default in normal use.
+#' @param wait Internal sleep function used between retry attempts.
+#' @param random Internal jitter function used to calculate retry delays.
 #' @returns A data frame with one row per state and `path`, `status`, and
 #'   `error` columns.
 #' @export
@@ -204,7 +242,9 @@ sicar_download_country <- function(
   dest_dir,
   overwrite = FALSE,
   tries = 3,
-  download_state = sicar_download_state
+  download_state = sicar_download_state,
+  wait = Sys.sleep,
+  random = function() runif(1)
 ) {
   polygon <- .sicar_validate_polygon(polygon)
   results <- lapply(sicar_states(), function(state) {
@@ -216,7 +256,9 @@ sicar_download_country <- function(
         polygon,
         state_dir,
         overwrite = overwrite,
-        tries = tries
+        tries = tries,
+        wait = wait,
+        random = random
       ),
       error = function(error) error
     )

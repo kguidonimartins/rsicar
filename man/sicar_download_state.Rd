@@ -10,7 +10,10 @@ sicar_download_state(
   polygon,
   dest_dir,
   overwrite = FALSE,
-  tries = 3
+  tries = 3,
+  wait = Sys.sleep,
+  random = function() runif(1),
+  attempt_download = .sicar_attempt_download
 )
 }
 \arguments{
@@ -25,6 +28,12 @@ sicar_download_state(
 \item{overwrite}{Whether to replace an existing validated archive.}
 
 \item{tries}{Maximum number of attempts.}
+
+\item{wait}{Internal sleep function used between retry attempts.}
+
+\item{random}{Internal jitter function used to calculate retry delays.}
+
+\item{attempt_download}{Internal dependency-injection hook.}
 }
 \value{
 The normalized path of the downloaded ZIP archive.

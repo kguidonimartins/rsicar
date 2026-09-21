@@ -10,7 +10,9 @@ sicar_download_country(
   dest_dir,
   overwrite = FALSE,
   tries = 3,
-  download_state = sicar_download_state
+  download_state = sicar_download_state,
+  wait = Sys.sleep,
+  random = function() runif(1)
 )
 }
 \arguments{
@@ -26,6 +28,10 @@ sicar_download_country(
 
 \item{download_state}{Internal dependency-injection hook; leave at its
 default in normal use.}
+
+\item{wait}{Internal sleep function used between retry attempts.}
+
+\item{random}{Internal jitter function used to calculate retry delays.}
 }
 \value{
 A data frame with one row per state and \code{path}, \code{status}, and

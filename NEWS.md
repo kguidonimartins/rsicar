@@ -9,3 +9,5 @@
 * Added `sicar_download_state()` and `sicar_download_country()` with ZIP
   validation, safe temporary files, resumable existing outputs, and per-state
   failure reporting.
+* Added bounded exponential backoff with jitter for retryable download failures;
+  permanent validation and solver errors now stop immediately.

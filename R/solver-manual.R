@@ -9,7 +9,8 @@ sicar_solver_manual <- function() {
         .sicar_abort(
           "The manual CAPTCHA solver requires an interactive session.",
           "rscicar_solver_error",
-          path = path
+          path = path,
+          retryable = FALSE
         )
       }
       answer <- readline(sprintf("Enter the CAPTCHA for %s: ", path))
