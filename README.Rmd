@@ -1,0 +1,66 @@
+---
+title: "rsicar"
+output: github_document
+vignette: >
+  %\VignetteIndexEntry{rsicar}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+devtools::load_all(quiet = TRUE)
+```
+
+# rsicar
+
+Cliente R nativo para consultar e baixar dados públicos do Sistema Nacional de
+Cadastro Ambiental Rural (SICAR).
+
+## Instalação
+
+```r
+remotes::install_github("kguidonimartins/rsicar")
+```
+
+O solver manual e os solvers definidos pelo usuário funcionam sem dependências
+de OCR. Para testar o solver experimental Tesseract, instale também os pacotes
+opcionais `magick` e `tesseract` e o programa Tesseract no sistema.
+
+## Uso
+
+O construtor não acessa a rede. A sessão HTTPS e o cookie jar são inicializados
+somente na primeira operação que consulta o SICAR.
+
+```{r usage}
+client <- sicar_client(solver = sicar_solver_manual())
+sicar_states()[1:5]
+sicar_polygon_types()
+```
+
+Para consultar as datas de disponibilização:
+
+```r
+dates <- sicar_release_dates(client)
+head(dates)
+```
+
+Para baixar um estado, o CAPTCHA pode ser resolvido manualmente:
+
+```r
+sicar_download_state(
+  client,
+  state = "PA",
+  polygon = "APPS",
+  dest_dir = "SICAR/PA"
+)
+```
+
+Consulte as vignettes para configurar solvers customizados e entender as
+garantias de validação dos arquivos baixados.
+
+## Status
+
+O pacote está em desenvolvimento. O solver Tesseract é experimental até passar
+o gate de acurácia definido no plano do projeto; solver manual e solver customizado
+são suportados desde já.
