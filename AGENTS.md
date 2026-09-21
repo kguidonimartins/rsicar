@@ -84,7 +84,7 @@ test_that("descriptive behavior", {
 - Snapshot complete errors and warnings with `expect_snapshot()`.
 - Use `webfakes` and fixtures for normal HTTP tests. The default test suite must
   not require network access.
-- Gate live tests behind `RSCICAR_RUN_LIVE_TESTS=true`. Keep them low-volume and
+- Gate live tests behind `RSICAR_RUN_LIVE_TESTS=true`. Keep them low-volume and
   never run them during ordinary checks or CRAN checks.
 - Never add real sleeps to retry tests; inject waiting and randomness instead.
 - Validate both successful ZIPs and failure cases such as HTML masquerading as

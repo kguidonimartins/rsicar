@@ -57,7 +57,7 @@ site: require-package ## build the pkgdown site
 	$(R) -e "pkgdown::build_site()"
 
 live-tests: require-package ## run opt-in, low-volume SICAR contract tests
-	$(R) -e "Sys.setenv(RSCICAR_RUN_LIVE_TESTS = 'true'); devtools::test(filter = 'live')" 2>&1 | tee out-live-tests.txt
+	$(R) -e "Sys.setenv(RSICAR_RUN_LIVE_TESTS = 'true'); devtools::test(filter = 'live')" 2>&1 | tee out-live-tests.txt
 
 all: install tests check ## install dependencies, build, install, test, and check
 

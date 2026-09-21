@@ -345,7 +345,7 @@ Usar `webfakes` para simular o protocolo completo:
 
 ### Contrato ao vivo
 
-Testes protegidos por `RSCICAR_RUN_LIVE_TESTS=true` devem verificar apenas:
+Testes protegidos por `RSICAR_RUN_LIVE_TESTS=true` devem verificar apenas:
 
 - disponibilidade dos endpoints;
 - 27 datas parseáveis;

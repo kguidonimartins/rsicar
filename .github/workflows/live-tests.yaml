@@ -18,5 +18,5 @@ jobs:
           needs: check
       - name: Run live contract tests
         env:
-          RSCICAR_RUN_LIVE_TESTS: 'true'
+          RSICAR_RUN_LIVE_TESTS: 'true'
         run: Rscript --no-init-file -e "devtools::test(filter = 'live')"
