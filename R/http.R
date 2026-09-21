@@ -65,7 +65,7 @@
         url = url,
         content_type = actual_type,
         expected_content_type = content_type,
-        retryable = FALSE
+        retryable = TRUE
       )
     }
   }

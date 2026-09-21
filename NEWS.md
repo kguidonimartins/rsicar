@@ -13,3 +13,5 @@
   permanent validation and solver errors now stop immediately.
 * Added Portuguese README/vignettes, pkgdown configuration, cross-platform CI,
   and opt-in live contract tests.
+* Fixed CAPTCHA temporary-file cleanup and retry handling for non-ZIP responses
+  returned after a rejected CAPTCHA.

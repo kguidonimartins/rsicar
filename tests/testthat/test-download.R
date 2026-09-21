@@ -145,7 +145,10 @@ test_that("state downloads validate and atomically rename a ZIP", {
   zip_body <- readBin(zip_path, what = "raw", n = file.info(zip_path)$size)
 
   client <- sicar_client(
-    solver = sicar_solver_function(function(path) "ABCDE")
+    solver = sicar_solver_function(function(path) {
+      expect_identical(file.exists(path), TRUE)
+      "ABCDE"
+    })
   )
   client$urls$index <- "https://example.test/index"
   client$urls$recaptcha <- "https://example.test/captcha"

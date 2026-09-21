@@ -20,7 +20,6 @@
   response <- .sicar_perform(client, url)
   response <- .sicar_require_response(response, url, 200, "image/png")
   path <- tempfile("rsicar-captcha-", fileext = ".png")
-  on.exit(unlink(path), add = TRUE)
   writeBin(httr2::resp_body_raw(response), path)
   path
 }
@@ -85,6 +84,7 @@
 
 .sicar_attempt_download <- function(client, state, polygon, dest_dir) {
   captcha_path <- .sicar_download_captcha(client)
+  on.exit(unlink(captcha_path), add = TRUE)
   captcha <- .sicar_solve(client$solver, captcha_path)
   url <- .sicar_download_url(client, state, polygon, captcha)
   temporary <- tempfile(
