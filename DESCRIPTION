@@ -1,0 +1,32 @@
+Package: rsicar
+Type: Package
+Title: Access Public Data from Brazil's Rural Environmental Registry
+Version: 0.0.0.9000
+Authors@R: person(
+    "Karlo", "Guidoni Martins", email = "kguidonimartins@gmail.com",
+    role = c("aut", "cre")
+    )
+Description: Native R client for querying and downloading public data from
+    Brazil's Rural Environmental Registry System (SICAR).
+URL: https://kguidonimartins.github.io/rsicar, https://github.com/kguidonimartins/rsicar
+BugReports: https://github.com/kguidonimartins/rsicar/issues
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends:
+    R (>= 4.1)
+Imports:
+    httr2,
+    rlang,
+    xml2
+Suggests:
+    devtools,
+    knitr,
+    magick,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    tesseract,
+    withr
+VignetteBuilder: knitr
+Config/testthat/edition: 3
+Config/roxygen2/version: 8.0.0
