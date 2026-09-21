@@ -10,8 +10,11 @@ sicar_solver_manual()
 An object usable as the \code{solver} argument of \code{sicar_client()}.
 }
 \description{
-Prompts the user to type the CAPTCHA shown at the given image path.
-Requires an interactive session.
+Prompts the user to type the CAPTCHA shown at the given image path. The
+image is also opened automatically with the operating system's default
+viewer (macOS, Linux, and Windows); if that fails (for example, a
+headless session with no GUI), the path is still printed so the image can
+be opened by hand. Requires an interactive session.
 }
 \examples{
 solver <- sicar_solver_manual()

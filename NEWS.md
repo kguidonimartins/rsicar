@@ -62,3 +62,8 @@
   (recorded but no longer present on disk at the recorded size) - for
   example, to see what is left to retry after a CAPTCHA solver exhausted
   its `tries` on some polygon type.
+* `sicar_solver_manual()` now opens each CAPTCHA image automatically with
+  the operating system's default viewer (macOS, Linux, and Windows) before
+  prompting for the answer, instead of only printing its path. Opening is
+  best-effort: if it fails (for example, a headless session with no GUI),
+  the path is still printed so the image can be opened by hand.

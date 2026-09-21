@@ -41,7 +41,9 @@ dates <- sicar_release_dates(client)
 head(dates)
 ```
 
-Para baixar um estado, o CAPTCHA pode ser resolvido manualmente:
+Para baixar um estado, o CAPTCHA pode ser resolvido manualmente: a
+imagem é aberta automaticamente no visualizador padrão do sistema
+(macOS, Linux e Windows) antes de pedir a resposta no console:
 
 ``` r
 sicar_download_state(
