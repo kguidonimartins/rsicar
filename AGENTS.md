@@ -51,7 +51,7 @@ During interactive development, use `devtools::load_all()` rather than
 - Keep optional OCR and test dependencies in `Suggests`; check for them at the
   point of use with an actionable error.
 - Use two-space indentation in R and R Markdown files.
-- Keep user-facing conditions in English and give them `rscicar_*` classes with
+- Keep user-facing conditions in English and give them `rsicar_*` classes with
   useful context fields.
 
 ## File layout

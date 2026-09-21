@@ -59,7 +59,7 @@ test_that("response validation reports status and content type failures", {
 
   expect_error(
     rsicar:::.sicar_require_response(bad_status, "https://example.test", 200),
-    class = "rscicar_http_error"
+    class = "rsicar_http_error"
   )
   expect_error(
     rsicar:::.sicar_require_response(
@@ -68,6 +68,6 @@ test_that("response validation reports status and content type failures", {
       200,
       "text/html"
     ),
-    class = "rscicar_http_error"
+    class = "rsicar_http_error"
   )
 })

@@ -13,7 +13,7 @@ test_that("release dates reject incomplete markup", {
 
   expect_error(
     rsicar:::.sicar_parse_release_dates(html),
-    class = "rscicar_parse_error"
+    class = "rsicar_parse_error"
   )
 })
 
@@ -22,6 +22,6 @@ test_that("release dates reject invalid dates", {
 
   expect_error(
     rsicar:::.sicar_parse_release_dates(html),
-    class = "rscicar_parse_error"
+    class = "rsicar_parse_error"
   )
 })

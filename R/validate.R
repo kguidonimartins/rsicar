@@ -2,7 +2,7 @@
   if (length(value) != 1L || is.na(value) || !is.character(value)) {
     .sicar_abort(
       sprintf("`%s` must be a single non-missing character value.", field),
-      "rscicar_invalid_argument",
+      "rsicar_invalid_argument",
       field = field,
       value = value
     )
@@ -12,7 +12,7 @@
   if (!normalized %in% allowed) {
     .sicar_abort(
       sprintf("Unknown %s `%s`.", field, value),
-      "rscicar_invalid_argument",
+      "rsicar_invalid_argument",
       field = field,
       value = value,
       allowed = allowed

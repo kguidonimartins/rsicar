@@ -19,7 +19,7 @@
     error = function(error) {
       .sicar_abort(
         sprintf("Request to `%s` failed: %s", url, conditionMessage(error)),
-        "rscicar_http_error",
+        "rsicar_http_error",
         parent = error,
         url = url,
         retryable = TRUE
@@ -43,7 +43,7 @@
         url,
         status
       ),
-      "rscicar_http_error",
+      "rsicar_http_error",
       url = url,
       status = actual_status,
       expected_status = status,
@@ -61,7 +61,7 @@
           url,
           content_type
         ),
-        "rscicar_http_error",
+        "rsicar_http_error",
         url = url,
         content_type = actual_type,
         expected_content_type = content_type,

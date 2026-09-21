@@ -28,10 +28,10 @@ test_that("state and polygon values are normalized", {
 test_that("invalid domain values have structured errors", {
   expect_error(
     rsicar:::.sicar_validate_state("XX"),
-    class = "rscicar_invalid_argument"
+    class = "rsicar_invalid_argument"
   )
   expect_error(
     rsicar:::.sicar_validate_polygon("unknown"),
-    class = "rscicar_invalid_argument"
+    class = "rsicar_invalid_argument"
   )
 })

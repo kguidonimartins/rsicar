@@ -40,7 +40,7 @@
         "Expected one release date for each of the %d states.",
         length(.sicar_states)
       ),
-      "rscicar_parse_error",
+      "rsicar_parse_error",
       states = states
     )
   }
@@ -49,7 +49,7 @@
   if (anyNA(parsed_dates)) {
     .sicar_abort(
       "SICAR returned an invalid release date.",
-      "rscicar_parse_error",
+      "rsicar_parse_error",
       dates = dates
     )
   }
@@ -71,7 +71,7 @@ sicar_release_dates <- function(client) {
   if (!inherits(client, "sicar_client")) {
     .sicar_abort(
       "`client` must be created by `sicar_client()`.",
-      "rscicar_invalid_argument",
+      "rsicar_invalid_argument",
       field = "client",
       value = client
     )

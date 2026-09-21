@@ -8,7 +8,7 @@
         paste(missing[!available], collapse = " and "),
         ". Install them with install.packages(c(\"magick\", \"tesseract\"))."
       ),
-      "rscicar_missing_dependency",
+      "rsicar_missing_dependency",
       packages = missing[!available]
     )
   }

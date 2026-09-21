@@ -17,7 +17,7 @@ sicar_client <- function(
   if (!inherits(solver, "sicar_solver")) {
     .sicar_abort(
       "`solver` must be created by a `sicar_solver_*()` function.",
-      "rscicar_invalid_argument",
+      "rsicar_invalid_argument",
       field = "solver",
       value = solver
     )
@@ -29,7 +29,7 @@ sicar_client <- function(
   ) {
     .sicar_abort(
       "`headers` must be a named character vector.",
-      "rscicar_invalid_argument",
+      "rsicar_invalid_argument",
       field = "headers",
       value = headers
     )
@@ -42,7 +42,7 @@ sicar_client <- function(
   ) {
     .sicar_abort(
       "`timeout` must be a positive number.",
-      "rscicar_invalid_argument",
+      "rsicar_invalid_argument",
       field = "timeout",
       value = timeout
     )

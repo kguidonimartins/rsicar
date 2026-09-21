@@ -132,7 +132,7 @@ Decisões de comportamento:
 
 - aceitar UF e tema sem diferenciar maiúsculas de minúsculas, mas sempre
   normalizar para os valores oficiais;
-- emitir erros com classes `rscicar_*`, mensagens em inglês para consistência com
+- emitir erros com classes `rsicar_*`, mensagens em inglês para consistência com
   pacotes R e campos com contexto (`url`, `state`, `polygon`, `attempt`);
 - falhar explicitamente depois de esgotar as tentativas no download de uma UF;
 - no download nacional, continuar nas demais UFs e devolver falhas por linha,

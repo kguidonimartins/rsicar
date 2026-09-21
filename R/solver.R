@@ -6,7 +6,7 @@
   if (length(value) != 1L || is.na(value) || !is.character(value)) {
     .sicar_abort(
       "A CAPTCHA solver must return one non-missing character value.",
-      "rscicar_solver_error",
+      "rsicar_solver_error",
       retryable = TRUE
     )
   }
@@ -14,7 +14,7 @@
   if (!grepl("^[A-Z0-9]{5}$", value)) {
     .sicar_abort(
       "A CAPTCHA solver must return exactly five alphanumeric characters.",
-      "rscicar_solver_error",
+      "rsicar_solver_error",
       value = value,
       retryable = TRUE
     )
@@ -36,7 +36,7 @@ sicar_solver_function <- function(fn) {
   if (!is.function(fn)) {
     .sicar_abort(
       "`fn` must be a function.",
-      "rscicar_invalid_argument",
+      "rsicar_invalid_argument",
       field = "fn",
       value = fn
     )

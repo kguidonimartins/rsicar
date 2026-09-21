@@ -8,7 +8,7 @@ sicar_solver_manual <- function() {
       if (!interactive()) {
         .sicar_abort(
           "The manual CAPTCHA solver requires an interactive session.",
-          "rscicar_solver_error",
+          "rsicar_solver_error",
           path = path,
           retryable = FALSE
         )

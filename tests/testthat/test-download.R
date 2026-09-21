@@ -22,7 +22,7 @@ test_that("valid ZIPs are accepted and bad files are rejected", {
   writeLines("not a zip", bad_path)
   expect_error(
     rsicar:::.sicar_validate_zip(bad_path),
-    class = "rscicar_download_error"
+    class = "rsicar_download_error"
   )
 })
 
@@ -53,7 +53,7 @@ test_that("country downloads preserve one result row per state", {
       tries = 1,
       download_state = fake_download
     ),
-    class = "rscicar_download_warning"
+    class = "rsicar_download_warning"
   )
   calls <- character()
   result <- suppressWarnings(
@@ -82,7 +82,7 @@ test_that("retryable download failures use bounded jitter without real sleep", {
     if (attempts == 1L) {
       rlang::abort(
         "temporary service failure",
-        class = "rscicar_download_error",
+        class = "rsicar_download_error",
         retryable = TRUE
       )
     }
@@ -117,7 +117,7 @@ test_that("non-retryable download failures stop immediately", {
     attempts <<- attempts + 1L
     rlang::abort(
       "invalid archive",
-      class = "rscicar_download_error",
+      class = "rsicar_download_error",
       retryable = FALSE
     )
   }
@@ -132,7 +132,7 @@ test_that("non-retryable download failures stop immediately", {
       wait = function(seconds) stop("wait should not be called"),
       attempt_download = fake_attempt
     ),
-    class = "rscicar_download_error"
+    class = "rsicar_download_error"
   )
   expect_identical(attempts, 1L)
 })

@@ -10,7 +10,7 @@ test_that("custom solvers reject invalid output", {
 
   expect_error(
     rsicar:::.sicar_solve(solver, "captcha.png"),
-    class = "rscicar_solver_error"
+    class = "rsicar_solver_error"
   )
 })
 
@@ -19,7 +19,7 @@ test_that("manual solvers fail clearly in non-interactive sessions", {
 
   expect_error(
     rsicar:::.sicar_solve(solver, "captcha.png"),
-    class = "rscicar_solver_error"
+    class = "rsicar_solver_error"
   )
 })
 

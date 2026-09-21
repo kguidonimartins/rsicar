@@ -15,3 +15,4 @@
   and opt-in live contract tests.
 * Fixed CAPTCHA temporary-file cleanup and retry handling for non-ZIP responses
   returned after a rejected CAPTCHA.
+* Renamed structured condition classes to the `rsicar_*` prefix.

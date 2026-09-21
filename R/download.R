@@ -28,7 +28,7 @@
   if (!file.exists(path) || file.info(path)$size <= 0) {
     .sicar_abort(
       "The downloaded file is empty or missing.",
-      "rscicar_download_error",
+      "rsicar_download_error",
       path = path
     )
   }
@@ -39,7 +39,7 @@
   ) {
     .sicar_abort(
       "The download is not a ZIP archive.",
-      "rscicar_download_error",
+      "rsicar_download_error",
       path = path
     )
   }
@@ -48,7 +48,7 @@
     error = function(error) {
       .sicar_abort(
         "The downloaded ZIP archive is invalid or truncated.",
-        "rscicar_download_error",
+        "rsicar_download_error",
         parent = error,
         path = path
       )
@@ -66,7 +66,7 @@
     error = function(error) {
       .sicar_abort(
         sprintf("Download from `%s` failed: %s", url, conditionMessage(error)),
-        "rscicar_download_error",
+        "rsicar_download_error",
         parent = error,
         url = url,
         path = path,
@@ -135,7 +135,7 @@ sicar_download_state <- function(
   if (!inherits(client, "sicar_client")) {
     .sicar_abort(
       "`client` must be created by `sicar_client()`.",
-      "rscicar_invalid_argument"
+      "rsicar_invalid_argument"
     )
   }
   state <- .sicar_validate_state(state)
@@ -143,13 +143,13 @@ sicar_download_state <- function(
   if (length(dest_dir) != 1L || !is.character(dest_dir) || is.na(dest_dir)) {
     .sicar_abort(
       "`dest_dir` must be one non-missing path.",
-      "rscicar_invalid_argument"
+      "rsicar_invalid_argument"
     )
   }
   if (length(tries) != 1L || !is.numeric(tries) || is.na(tries) || tries < 1) {
     .sicar_abort(
       "`tries` must be a positive number.",
-      "rscicar_invalid_argument"
+      "rsicar_invalid_argument"
     )
   }
   if (
@@ -157,13 +157,13 @@ sicar_download_state <- function(
   ) {
     .sicar_abort(
       "`wait`, `random`, and `attempt_download` must be functions.",
-      "rscicar_invalid_argument"
+      "rsicar_invalid_argument"
     )
   }
   if (length(overwrite) != 1L || is.na(overwrite) || !is.logical(overwrite)) {
     .sicar_abort(
       "`overwrite` must be TRUE or FALSE.",
-      "rscicar_invalid_argument"
+      "rsicar_invalid_argument"
     )
   }
 
@@ -191,7 +191,7 @@ sicar_download_state <- function(
       if (!file.rename(result, final_path)) {
         .sicar_abort(
           "The validated download could not be moved to its destination.",
-          "rscicar_download_error",
+          "rsicar_download_error",
           path = final_path,
           attempt = attempt
         )
@@ -201,7 +201,7 @@ sicar_download_state <- function(
     if (!.sicar_retryable(last_error) || attempt == as.integer(tries)) {
       .sicar_abort(
         sprintf("Download failed on attempt %d.", attempt),
-        "rscicar_download_error",
+        "rsicar_download_error",
         state = state,
         polygon = polygon,
         attempt = attempt,
@@ -214,7 +214,7 @@ sicar_download_state <- function(
 
   .sicar_abort(
     sprintf("Download failed after %d attempt(s).", tries),
-    "rscicar_download_error",
+    "rsicar_download_error",
     state = state,
     polygon = polygon,
     attempt = tries,
@@ -284,7 +284,7 @@ sicar_download_country <- function(
   if (any(result$status == "failed")) {
     .sicar_warn(
       sprintf("%d state download(s) failed.", sum(result$status == "failed")),
-      "rscicar_download_warning",
+      "rsicar_download_warning",
       result = result
     )
   }
