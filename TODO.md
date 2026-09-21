@@ -153,15 +153,15 @@ sicar_resolve_municipality("araçoiaba/PE")
 - [x] Definir tratamento explícito para feições inválidas, geometrias vazias,
   CRS ausente, resultado sem feições e diferenças de precisão entre limites.
 
-## 6 — Retornar as geometrias selecionadas
+## [x] 6 — Retornar as geometrias selecionadas
 
-- [ ] Retornar um objeto `sf` com as feições originais do SICAR que
+- [x] Retornar um objeto `sf` com as feições originais do SICAR que
   intersectam pelo menos um município solicitado.
-- [ ] Preservar atributos, geometria e CRS das feições de origem; a função não
+- [x] Preservar atributos, geometria e CRS das feições de origem; a função não
   deve recortar, transformar permanentemente ou gravar as geometrias.
-- [ ] Definir se o retorno conterá metadados de origem e de município, conforme
-  a decisão do contrato sobre atributos adicionais.
-- [ ] Garantir que o resultado possa ser gravado pelo usuário posteriormente
+- [x] Não acrescentar metadados de origem ou de município ao retorno; os
+  atributos permanecem exatamente os da camada SICAR de origem.
+- [x] Garantir que o resultado possa ser gravado pelo usuário posteriormente
   com `sf::st_write()` caso deseje persistir a AOI.
 
 ## [x] Temporário — acelerar o ciclo de desenvolvimento

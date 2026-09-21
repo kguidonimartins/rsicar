@@ -71,6 +71,31 @@ test_that("boundary contact is included by st_intersects", {
   expect_identical(result$id, "boundary")
 })
 
+test_that("empty selections retain the source schema and CRS", {
+  source <- sf::st_sf(
+    id = "outside",
+    label = "not selected",
+    geometry = sf::st_sfc(
+      sf::st_polygon(list(rbind(
+        c(-10, -10),
+        c(-9, -10),
+        c(-9, -9),
+        c(-10, -9),
+        c(-10, -10)
+      ))),
+      crs = 4674
+    )
+  )
+  archive <- make_source_zip(source, withr::local_tempdir())
+
+  result <- sicar_extract_municipality("Recife", archive)
+
+  expect_s3_class(result, "sf")
+  expect_identical(nrow(result), 0L)
+  expect_identical(names(result), names(source))
+  expect_identical(sf::st_crs(result)$epsg, 4674L)
+})
+
 test_that("municipality CRS is transformed to the source CRS", {
   bbox <- recife_bbox()
   source <- sf::st_sf(
