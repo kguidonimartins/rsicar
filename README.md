@@ -18,9 +18,7 @@ projeto como referência.
 Este porte usa como referência o commit
 `facffbf91a4998a2daa814a65d1d36ea99266f83` do projeto Python. O projeto
 original é distribuído sob a licença MIT; sua atribuição e o texto da
-licença estão preservados em
-[`ref/SICAR/LICENSE`](https://github.com/urbanogilson/SICAR/blob/main/LICENSE)
-e [LICENSE.md](LICENSE.md).
+licença estão preservados em [LICENSE.md](LICENSE.md).
 
 ## Instalação
 
