@@ -61,6 +61,9 @@
     )
   }
 
+  cli::cli_progress_step(
+    "Downloading municipality geometries from geobr (first run only; cached afterwards)"
+  )
   municipalities <- tryCatch(
     geobr::read_municipality(
       year = 2025,

@@ -5,14 +5,19 @@ test_that("municipality identifiers resolve to ordered unique IBGE codes", {
 
   expect_identical(
     result,
-    c("2611606", "2609600", "2610707", "3147907")
+    c(
+      "Recife/PE" = "2611606",
+      "Olinda/PE" = "2609600",
+      "Paulista/PE" = "2610707",
+      "Passos/MG" = "3147907"
+    )
   )
 })
 
 test_that("municipality names ignore accents and repeated whitespace", {
   expect_identical(
     sicar_resolve_municipality("  sao   lourenco da mata "),
-    "2613701"
+    c("São Lourenço da Mata/PE" = "2613701")
   )
 })
 
@@ -27,7 +32,7 @@ test_that("state identifiers expand to all municipality codes", {
 test_that("the uf argument disambiguates municipality names", {
   expect_identical(
     sicar_resolve_municipality("Araçoiaba", uf = "PE"),
-    "2601052"
+    c("Araçoiaba/PE" = "2601052")
   )
 })
 
@@ -44,7 +49,7 @@ test_that("unknown names can be omitted in non-strict mode", {
       c("recife", "municipio inexistente"),
       strict = FALSE
     )
-    expect_identical(result, "2611606")
+    expect_identical(result, c("Recife/PE" = "2611606"))
   })
 })
 

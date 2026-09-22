@@ -159,7 +159,8 @@
 #'   unknown names are warned about and omitted.
 #'
 #' @returns A character vector of unique seven-digit IBGE codes, in order of
-#'   first occurrence.
+#'   first occurrence, named `"Municipality/UF"` so each code's municipality
+#'   can be checked back.
 #' @family municipality extraction
 #' @examples
 #' sicar_resolve_municipality(c("Recife", "Olinda", "Passos/MG"))
@@ -205,5 +206,12 @@ sicar_resolve_municipality <- function(x, uf = NULL, strict = TRUE) {
     catalog = catalog,
     strict = strict
   )
-  unique(unlist(resolved, use.names = FALSE))
+  codes <- unique(unlist(resolved, use.names = FALSE))
+  match <- match(codes, catalog$code_muni)
+  names(codes) <- paste0(
+    catalog$name_muni[match],
+    "/",
+    catalog$abbrev_state[match]
+  )
+  codes
 }

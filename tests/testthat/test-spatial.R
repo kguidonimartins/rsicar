@@ -186,6 +186,55 @@ test_that("multiple source ZIPs and municipalities are combined once", {
   expect_identical(result$id, c("shared", "shared"))
 })
 
+test_that("reading a source ZIP skips features outside the AOI bbox", {
+  bbox <- recife_bbox()
+  inside <- sf::st_as_sfc(bbox)[[1]]
+  outside <- sf::st_polygon(list(rbind(
+    c(-10, -10),
+    c(-9, -10),
+    c(-9, -9),
+    c(-10, -9),
+    c(-10, -10)
+  )))
+  source <- sf::st_sf(
+    id = c("inside", "outside"),
+    geometry = sf::st_sfc(inside, outside, crs = 4674)
+  )
+  archive <- make_source_zip(source, withr::local_tempdir())
+
+  layers <- rsicar:::.sicar_read_source_zip(archive, aoi = sf::st_as_sfc(bbox))
+
+  expect_identical(layers[[1]]$id, "inside")
+})
+
+test_that(".sicar_aoi_wkt_filter() skips filtering without an AOI or CRS", {
+  expect_identical(
+    rsicar:::.sicar_aoi_wkt_filter("does-not-matter.shp", NULL),
+    character(0)
+  )
+
+  no_prj_dir <- withr::local_tempdir()
+  no_prj_path <- file.path(no_prj_dir, "sicar.shp")
+  sf::st_write(
+    sf::st_sf(
+      id = "x",
+      geometry = sf::st_sfc(sf::st_point(c(0, 0)), crs = 4674)
+    ),
+    no_prj_path,
+    quiet = TRUE
+  )
+  file.remove(file.path(no_prj_dir, "sicar.prj"))
+  aoi <- sf::st_as_sfc(sf::st_bbox(
+    c(xmin = 0, ymin = 0, xmax = 1, ymax = 1),
+    crs = 4674
+  ))
+
+  expect_identical(
+    rsicar:::.sicar_aoi_wkt_filter(no_prj_path, aoi),
+    character(0)
+  )
+})
+
 test_that("source archives without shapefiles are rejected", {
   testthat::local_mocked_bindings(
     .sicar_municipality_geometries = test_municipality_geometries,
@@ -224,26 +273,32 @@ test_that("source shapefiles without a CRS are rejected", {
   )
 })
 
-test_that("invalid source geometries are rejected", {
+test_that("invalid source geometries are repaired with st_make_valid()", {
   testthat::local_mocked_bindings(
     .sicar_municipality_geometries = test_municipality_geometries,
     .package = "rsicar"
   )
+  bbox <- recife_bbox()
+  # A bowtie polygon crossing the Recife bounding box: self-intersecting, so
+  # invalid, but repairable by `sf::st_make_valid()` without losing the part
+  # that intersects Recife.
   invalid <- sf::st_polygon(list(rbind(
-    c(0, 0),
-    c(1, 1),
-    c(1, 0),
-    c(0, 1),
-    c(0, 0)
+    c(bbox[["xmin"]], bbox[["ymin"]]),
+    c(bbox[["xmax"]], bbox[["ymax"]]),
+    c(bbox[["xmax"]], bbox[["ymin"]]),
+    c(bbox[["xmin"]], bbox[["ymax"]]),
+    c(bbox[["xmin"]], bbox[["ymin"]])
   )))
+  expect_false(sf::st_is_valid(invalid))
   source <- sf::st_sf(
     id = "invalid",
     geometry = sf::st_sfc(invalid, crs = 4674)
   )
   archive <- make_source_zip(source, withr::local_tempdir())
 
-  expect_snapshot(
-    error = TRUE,
-    sicar_extract_municipality("Recife", archive)
-  )
+  expect_snapshot(result <- sicar_extract_municipality("Recife", archive))
+
+  expect_s3_class(result, "sf")
+  expect_identical(result$id, "invalid")
+  expect_true(all(sf::st_is_valid(result)))
 })

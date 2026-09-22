@@ -24,7 +24,10 @@ test_that("resolving municipality names does not download geometries", {
     .package = "rsicar"
   )
 
-  expect_identical(rsicar::sicar_resolve_municipality("Recife"), "2611606")
+  expect_identical(
+    rsicar::sicar_resolve_municipality("Recife"),
+    c("Recife/PE" = "2611606")
+  )
   expect_identical(calls, 0L)
 })
 

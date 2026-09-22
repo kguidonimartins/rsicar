@@ -18,7 +18,7 @@
       Municipality not found in the catalog: `municipio inexistente`.
       * i Ignored because `strict` is `FALSE`.
     Code
-      expect_identical(result, "2611606")
+      expect_identical(result, c(`Recife/PE` = "2611606"))
 
 # invalid municipality identifiers produce classified errors
 

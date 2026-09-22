@@ -1,5 +1,18 @@
 # rsicar 0.0.0.9000
 
+* `sicar_resolve_municipality()` now names its result `"Municipality/UF"`,
+  so each returned IBGE code can be traced back to the municipality it came
+  from.
+* `sicar_extract_municipality()` now reads each source shapefile with a
+  `wkt_filter` built from the bounding box of the requested municipalities,
+  so GDAL can skip features outside the area of interest instead of
+  materializing the whole layer before filtering.
+* `sicar_extract_municipality()` now repairs invalid source geometries with
+  `sf::st_make_valid()` instead of aborting, and warns with the number of
+  geometries repaired per source shapefile.
+* `sicar_extract_municipality()` now reports progress while reading source
+  archives, and while downloading the municipality geometry reference on
+  first extraction, instead of staying silent until something fails.
 * `sicar_extract_municipality()` now downloads the 2025 municipality geometry
   reference only on first extraction and reuses a local cache, keeping the
   large spatial dataset out of the installed package.

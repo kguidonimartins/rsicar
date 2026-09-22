@@ -14,11 +14,11 @@
       Error in `.sicar_abort()`:
       ! Source shapefile has no CRS.
 
-# invalid source geometries are rejected
+# invalid source geometries are repaired with st_make_valid()
 
     Code
-      sicar_extract_municipality("Recife", archive)
+      result <- sicar_extract_municipality("Recife", archive)
     Condition
-      Error in `.sicar_abort()`:
-      ! Source shapefile contains invalid geometries.
+      Warning:
+      Repaired 1 invalid geometry in source shapefile with `sf::st_make_valid()`.
 

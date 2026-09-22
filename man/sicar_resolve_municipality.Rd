@@ -18,7 +18,8 @@ unknown names are warned about and omitted.}
 }
 \value{
 A character vector of unique seven-digit IBGE codes, in order of
-first occurrence.
+first occurrence, named \code{"Municipality/UF"} so each code's municipality
+can be checked back.
 }
 \description{
 Accepts seven-digit IBGE codes, municipality names with or without accents,
