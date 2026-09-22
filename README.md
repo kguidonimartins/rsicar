@@ -98,8 +98,12 @@ features <- sicar_extract_municipality(
 sf::st_write(features, "minha-aoi.gpkg")
 ```
 
-Consulte as vignettes para configurar solvers customizados e entender as
-garantias de validação dos arquivos baixados.
+Consulte as vignettes para configurar solvers customizados, entender as
+garantias de validação dos arquivos baixados e ler o [dicionário
+completo dos dados do
+CAR](https://kguidonimartins.github.io/rsicar/articles/car-data.html),
+com os campos, códigos, temas espaciais, unidades e cautelas para
+análise.
 
 ## Status
 

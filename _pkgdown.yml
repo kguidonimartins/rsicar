@@ -3,6 +3,14 @@ url: https://kguidonimartins.github.io/rsicar
 template:
   bootstrap: 5
 
+articles:
+  - title: Guias
+    contents:
+      - getting-started
+      - car-data
+      - municipality-aoi
+      - captcha-solvers
+
 reference:
   - title: Client and domain
     contents:

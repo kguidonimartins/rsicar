@@ -1,0 +1,238 @@
+---
+title: "Dados do CAR: dicionário, temas e boas práticas"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Dados do CAR: dicionário, temas e boas práticas}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>", eval = FALSE)
+```
+
+O Cadastro Ambiental Rural (CAR) é um registro público eletrônico obrigatório
+para imóveis rurais. O Sistema Nacional de Cadastro Ambiental Rural (SICAR)
+integra e disponibiliza parte dessas informações para consulta, monitoramento,
+planejamento ambiental e controle do desmatamento. Esta vignette documenta a
+estrutura dos arquivos públicos que o `rsicar` baixa, com foco no uso analítico
+dos atributos e das geometrias.
+
+As definições dos campos vêm do [Dicionário de Dados do
+SICAR](https://github.com/urbanogilson/SICAR/blob/main/docs/Dicionario_de_Dados_SICAR.pdf),
+mantido na referência Python em
+`ref/SICAR/docs/Dicionario_de_Dados_SICAR.pdf`. A descrição foi complementada
+com a [Consulta Pública do CAR](https://consultapublica.car.gov.br/publico/),
+com a página oficial [O que é o Cadastro Ambiental
+Rural](https://www.gov.br/agricultura/pt-br/assuntos/florestal/cadastro-ambiental-rural-1/o-que-e-o-cadastro-ambiental-rural)
+e com a [nota técnica do MMA sobre os dados usados no Manual de Crédito
+Rural](https://www.gov.br/mma/pt-br/assuntos/controle-ao-desmatamento-queimadas-e-ordenamento-ambiental-territorial/controle-do-desmatamento-1/atendimento-ao-manual-de-credito-rural/NotaExplicativaManualdeCreditoRural_27_03.pdf).
+As páginas e os arquivos do serviço podem mudar; esta referência foi revisada
+em 22/09/2026.
+
+## O que o `rsicar` baixa
+
+O SICAR publica os dados por combinação de UF e tema. O `rsicar` aceita as 27
+UFs retornadas por `sicar_states()` e os nove códigos retornados por
+`sicar_polygon_types()`:
+
+| Código do arquivo | Tema | O que representa |
+|:--|:--|:--|
+| `AREA_IMOVEL` | Área do imóvel | Perímetro declarado do imóvel rural, assentamento ou território tradicional. |
+| `APPS` | Áreas de Preservação Permanente | Áreas de APP declaradas no cadastro, incluindo subtemas de hidrografia, relevo e outras APPs. |
+| `VEGETACAO_NATIVA` | Remanescente de vegetação nativa | Áreas declaradas como remanescentes de vegetação nativa. |
+| `AREA_CONSOLIDADA` | Área rural consolidada | Áreas rurais consolidadas declaradas no imóvel. |
+| `AREA_POUSIO` | Área de pousio | Áreas declaradas como pousio. |
+| `HIDROGRAFIA` | Hidrografia | Feições hidrográficas declaradas no cadastro. |
+| `USO_RESTRITO` | Área de uso restrito | Áreas enquadradas como de uso restrito. |
+| `SERVIDAO_ADMINISTRATIVA` | Servidão administrativa | Faixas ou áreas de servidão administrativa declaradas. |
+| `RESERVA_LEGAL` | Reserva Legal | Áreas de Reserva Legal; a consulta pública diferencia, entre outras, Reserva Legal averbada, aprovada e proposta. |
+
+O código do arquivo é um agrupador de download. Dentro de um arquivo temático,
+`cod_tema` e `nom_tema` podem distinguir subtemas. Por exemplo, a Consulta
+Pública apresenta APP hídrica por largura do curso d'água, nascentes, lagos e
+reservatórios; APP de relevo por altitude, declividade, borda de chapada e topo
+de morro; e outras APPs como vereda, manguezal e restinga. A lista exibida pelo
+serviço é uma taxonomia de apresentação e pode ser ampliada sem que o código
+do arquivo `APPS` mude.
+
+Um download é um ZIP com a camada espacial e seus arquivos auxiliares, em
+geral um shapefile (`.shp`, `.shx`, `.dbf` e `.prj`). O arquivo `.dbf` contém
+os atributos descritos abaixo; o `.shp` contém as geometrias. O `rsicar`
+valida o ZIP antes de renomeá-lo para o nome final, mas não converte a camada
+para outro formato nem altera os dados de origem.
+
+## Unidade de observação
+
+Uma linha representa uma feição espacial de um tema, e não necessariamente um
+imóvel único. O mesmo `cod_imovel` pode aparecer:
+
+- em vários temas baixados;
+- em mais de uma feição dentro do mesmo tema;
+- com a mesma informação cadastral repetida em feições ambientais diferentes.
+
+Por isso, conte imóveis com `length(unique(cod_imovel))`, e não com o número
+de linhas. Também não some `num_area` depois de empilhar temas: a área bruta do
+imóvel é um atributo cadastral repetido, não a área daquela feição temática.
+Para medir áreas de geometrias, calcule uma área espacialmente apropriada e
+documente o CRS e o método usados.
+
+O cadastro é declaratório e a inscrição no CAR não é título de propriedade ou
+de posse. A [página oficial do serviço](https://www.gov.br/pt-br/servicos/inscrever-imovel-rural-no-cadastro-ambiental-rural-car)
+também informa que o cadastramento não reconhece, por si só, direito de
+propriedade ou posse. Os atributos públicos não devem ser tratados como uma
+certidão fundiária ou como prova de regularidade ambiental.
+
+## Dicionário de atributos
+
+Os doze campos abaixo são os campos documentados no PDF de referência. A
+tipificação `publico` e os tipos `texto`/`numero` são os indicados no PDF.
+Campos adicionais podem aparecer em versões ou produtos derivados; eles não
+devem ser confundidos com os campos originais do SICAR.
+
+| Campo | Tipificação | Tipo | Unidade ou formato | Descrição e interpretação |
+|:--|:--|:--|:--|:--|
+| `cod_tema` | público | texto | Código do tema | Código do tema ambiental ou de uso do solo da feição. Use-o junto com `nom_tema`; não presuma que ele seja o mesmo que o nome do arquivo baixado. |
+| `nom_tema` | público | texto | Nome do tema | Nome legível do tema ou subtema cadastrado, como APP, Reserva Legal, hidrografia ou vegetação nativa. |
+| `cod_imovel` | público | texto | Identificador | Número de inscrição único atribuído ao imóvel ou posse no SICAR. Preserve como texto para não perder zeros, pontuação ou eventuais alterações de formato. |
+| `mod_fiscal` | público | número | Módulos fiscais | Número de módulos fiscais informado para o imóvel. O módulo fiscal é uma medida agrária definida por município; não é uma área fixa em hectares e não deve ser convertido usando uma constante nacional. |
+| `num_area` | público | número | Hectares, na documentação técnica do MMA | Área bruta total declarada para o imóvel no cadastro. É uma área informada no CAR, não necessariamente a área calculada a partir da geometria baixada. |
+| `ind_status` | público | texto | `AT`, `PE`, `SU` ou `CA` | Situação administrativa do cadastro: **AT**ivo, **PE**ndente, **SU**spenso ou **CA**ncelado. |
+| `ind_tipo` | público | texto | `IRU`, `AST` ou `PCT` | Tipo do cadastro: **IRU** — imóvel rural; **AST** — assentamento de reforma agrária; **PCT** — povos e comunidades tradicionais. |
+| `des_condic` | público | texto | Texto livre ou categórico | Condição atual do cadastro no processo de análise. Pode trazer uma descrição mais específica que `ind_status`, inclusive informação adicional sobre suspensão ou cancelamento. |
+| `municipio` | público | texto | Nome | Município em que o imóvel está localizado segundo o cadastro. Nomes podem variar em acentuação, abreviação e atualização administrativa. |
+| `cod_estado` | público | texto | Sigla de UF, segundo o PDF | Código de duas letras da Unidade Federativa no dicionário de referência. Produtos técnicos derivados podem renomear o campo para `uf` e usar código numérico do IBGE; verifique os valores antes de fazer uma junção. |
+| `dat_criaca` | público | texto | Data em texto | Data de criação ou inscrição do imóvel no SICAR. O formato deve ser inspecionado na versão baixada antes da conversão automática para `Date`. |
+| `dat_atuali` | público | texto | Data em texto | Data da última modificação registrada nos dados de inscrição. É uma data de atualização cadastral, não necessariamente a data de atualização do arquivo público. |
+
+### Sobre unidades e nomes de campos
+
+O PDF original chama `num_area` e `mod_fiscal` apenas de `numero`. A nota
+técnica mais recente do MMA descreve os campos semanticamente correspondentes
+como área em hectares e número de módulos fiscais. Essa complementação é útil
+para análise, mas não autoriza renomear ou recodificar os campos do ZIP: o
+schema efetivo da versão baixada deve ser a fonte de verdade.
+
+Há uma diferença importante de contexto em `cod_estado`. O dicionário do SICAR
+descreve uma sigla de UF de duas letras, enquanto uma base derivada documentada
+pelo MMA usa `uf` para um código de UF de dois dígitos. O `rsicar` recebe siglas
+como `PA` e `PE` para selecionar downloads, mas isso não garante que todo
+produto derivado use a mesma representação no atributo espacial.
+
+Os campos de data também permanecem como texto no arquivo de origem. Antes de
+analisar tendências, examine valores ausentes, formatos mistos e o fuso ou
+precisão implícita. A data de disponibilização retornada por
+`sicar_release_dates()` responde a outra pergunta: quando o serviço publicou
+aquele recorte por UF.
+
+## Situação, condição e regularidade não são sinônimos
+
+`ind_status` é a situação do cadastro no sistema. `des_condic` oferece o
+contexto da análise. Nenhum dos dois, isoladamente, deve ser interpretado como
+aprovação ambiental, inexistência de passivo ou reconhecimento de domínio.
+
+Em particular:
+
+- **Ativo** não significa que todas as geometrias estejam validadas ou que o
+  imóvel esteja ambientalmente regular;
+- **Pendente** indica que há uma pendência no fluxo cadastral ou de análise, mas
+  não descreve sozinho sua causa;
+- **Suspenso** e **cancelado** exigem consulta da causa e da justificativa no
+  órgão gestor ou na ficha do imóvel;
+- `des_condic` pode carregar detalhes que não cabem no código de dois
+  caracteres de `ind_status`.
+
+A [orientação oficial sobre CAR suspenso ou
+cancelado](https://www.gov.br/gestao/pt-br/assuntos/meu-imovel-rural/fique-em-dia/car-suspenso-cancelado)
+recomenda consultar o motivo e a justificativa na ficha do imóvel e procurar o
+órgão responsável pela gestão estadual. Para filtros regulatórios específicos,
+use a norma aplicável e a data de referência; não transforme a legenda de
+`ind_status` em uma regra geral de elegibilidade.
+
+## Como inspecionar um arquivo baixado
+
+Para uma inspeção reprodutível, mantenha o ZIP original, a UF, o tema e a data
+de disponibilização. O `manifest.json` criado pelo pacote registra caminho,
+tamanho, MD5, tema, UF, solver e momento do download.
+
+```r
+zip_path <- "SICAR/PA/PA_AREA_IMOVEL.zip"
+
+# Ver os componentes do ZIP sem extrair a camada inteira.
+utils::unzip(zip_path, list = TRUE)
+
+# Extrair e ler a camada com o pacote sf opcional.
+dir_path <- tempfile("sicar-")
+dir.create(dir_path)
+utils::unzip(zip_path, exdir = dir_path)
+shp_path <- list.files(
+  dir_path,
+  pattern = "\\.shp$",
+  full.names = TRUE,
+  recursive = TRUE,
+  ignore.case = TRUE
+)
+layer <- sf::st_read(shp_path[[1]], quiet = TRUE)
+
+names(layer)
+sf::st_crs(layer)
+table(layer$ind_status, useNA = "ifany")
+length(unique(layer$cod_imovel))
+```
+
+Para extrair por município, prefira `sicar_extract_municipality()`. A função
+preserva os atributos e a geometria original e acrescenta `filepath` e `tema`
+para rastreabilidade da origem. Ela seleciona feições que intersectam o
+município; não recorta a geometria no limite municipal.
+
+```r
+features <- rsicar::sicar_extract_municipality(
+  c("Recife", "Olinda"),
+  src_dir = "SICAR/PE"
+)
+
+names(features)
+table(features$tema, useNA = "ifany")
+```
+
+## Recomendações para análises
+
+1. **Declare a data do recorte.** Combine a data retornada por
+   `sicar_release_dates()` com o timestamp do download e, quando necessário,
+   com `dat_atuali`.
+2. **Conte imóveis por identificador.** Use `cod_imovel` para deduplicar e
+   registre se a unidade da análise é imóvel, feição, tema ou município.
+3. **Não some temas sem uma regra espacial.** APP, Reserva Legal, vegetação
+   nativa e outras camadas podem se sobrepor ou representar recortes
+   conceitualmente diferentes.
+4. **Separe área declarada de área calculada.** `num_area` é um atributo do
+   cadastro; a área da geometria depende do CRS, da validade geométrica e do
+   método de cálculo.
+5. **Inspecione o CRS.** Use `sf::st_crs()` e escolha uma projeção adequada à
+   região e ao cálculo. Não presuma que uma área em graus possa ser somada ou
+   comparada diretamente.
+6. **Preserve os códigos originais.** Guarde `ind_status`, `ind_tipo`,
+   `cod_tema` e `cod_imovel` como foram recebidos, além de eventuais versões
+   recodificadas para apresentação.
+7. **Documente filtros e exclusões.** Uma análise que remove `SU`, `CA`, `AST`
+   ou `PCT` produz uma população diferente da base pública completa.
+8. **Verifique a fonte institucional.** Para uma decisão administrativa,
+   fundiária ou de regularização, confirme a situação diretamente no SICAR e
+   no órgão gestor estadual.
+
+## Fontes e limites de uso
+
+O CAR foi instituído pela [Lei nº 12.651/2012](https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/lei/l12651.htm)
+e o SICAR é regulamentado, entre outras normas, pelo [Decreto nº
+7.830/2012](https://www.planalto.gov.br/ccivil_03/_ato2011-2014/2012/decreto/d7830.htm)
+e pela [Instrução Normativa MMA nº 2/2014](https://www.car.gov.br/leis/IN_CAR.pdf).
+Consulte também:
+
+- [Consulta Pública do CAR — imóveis, downloads e geoserviços](https://consultapublica.car.gov.br/publico/);
+- [Serviço oficial de inscrição no CAR](https://www.gov.br/pt-br/servicos/inscrever-imovel-rural-no-cadastro-ambiental-rural-car);
+- [Dicionário de Dados do SICAR usado como referência](https://github.com/urbanogilson/SICAR/blob/main/docs/Dicionario_de_Dados_SICAR.pdf);
+- [Nota técnica do MMA com campos SICAR e metodologia de análise](https://www.gov.br/mma/pt-br/assuntos/controle-ao-desmatamento-queimadas-e-ordenamento-ambiental-territorial/controle-do-desmatamento-1/atendimento-ao-manual-de-credito-rural/NotaExplicativaManualdeCreditoRural_27_03.pdf).
+
+O `rsicar` baixa dados públicos disponibilizados pelo SICAR; ele não é a fonte
+autoritativa para corrigir atributos, validar domínio, decidir regularidade ou
+substituir a comunicação com o órgão ambiental competente.

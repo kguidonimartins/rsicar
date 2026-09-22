@@ -1,5 +1,8 @@
 # rsicar 0.0.0.9000
 
+* Added the `car-data` vignette with a complete reference for the public CAR
+  data: download themes, the twelve SICAR attributes, status codes, units,
+  provenance, spatial interpretation, and analytical cautions.
 * `sicar_extract_municipality()` now adds `filepath` with the absolute source
   ZIP path and `tema` with its recognized SICAR polygon type as the first two
   attribute columns.
