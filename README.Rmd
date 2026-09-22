@@ -12,8 +12,6 @@ knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 devtools::load_all(quiet = TRUE)
 ```
 
-# rsicar
-
 Cliente R nativo para consultar e baixar dados públicos do Sistema Nacional de
 Cadastro Ambiental Rural (SICAR).
 

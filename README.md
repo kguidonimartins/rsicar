@@ -1,8 +1,6 @@
 rsicar
 ================
 
-# rsicar
-
 Cliente R nativo para consultar e baixar dados públicos do Sistema
 Nacional de Cadastro Ambiental Rural (SICAR).
 
