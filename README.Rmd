@@ -17,6 +17,20 @@ devtools::load_all(quiet = TRUE)
 Cliente R nativo para consultar e baixar dados públicos do Sistema Nacional de
 Cadastro Ambiental Rural (SICAR).
 
+## Atribuição e proveniência
+
+O `rsicar` é uma implementação nativa em R inspirada e portada a partir do
+pacote Python [SICAR](https://github.com/urbanogilson/SICAR), desenvolvido por
+[Gilson Urbano](https://github.com/urbanogilson). A API e a implementação foram
+adaptadas para as convenções do R, mas o fluxo essencial de consulta e download
+do SICAR foi desenvolvido tendo esse projeto como referência.
+
+Este porte usa como referência o commit
+`facffbf91a4998a2daa814a65d1d36ea99266f83` do projeto Python. O projeto
+original é distribuído sob a licença MIT; sua atribuição e o texto da licença
+estão preservados em [`ref/SICAR/LICENSE`](https://github.com/urbanogilson/SICAR/blob/main/LICENSE)
+e [LICENSE.md](LICENSE.md).
+
 ## Instalação
 
 ```r

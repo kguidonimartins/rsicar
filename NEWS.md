@@ -1,5 +1,7 @@
 # rsicar 0.0.0.9000
 
+* Documented the Python SICAR project by Gilson Urbano as the upstream
+  inspiration and porting reference in the README.
 * Added the `car-data` vignette with a complete reference for the public CAR
   data: download themes, the twelve SICAR attributes, status codes, units,
   provenance, spatial interpretation, and analytical cautions.
