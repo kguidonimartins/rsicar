@@ -4,6 +4,7 @@ make_source_zip <- function(
   data,
   directory,
   name = "source.zip",
+  layer_name = "sicar",
   remove_prj = FALSE
 ) {
   layer_dir <- file.path(
@@ -11,10 +12,10 @@ make_source_zip <- function(
     paste0("layer-", tools::file_path_sans_ext(name))
   )
   dir.create(layer_dir)
-  shapefile <- file.path(layer_dir, "sicar.shp")
+  shapefile <- file.path(layer_dir, paste0(layer_name, ".shp"))
   sf::st_write(data, shapefile, quiet = TRUE, delete_layer = TRUE)
   if (remove_prj) {
-    file.remove(file.path(layer_dir, "sicar.prj"))
+    file.remove(file.path(layer_dir, paste0(layer_name, ".prj")))
   }
   archive <- file.path(directory, name)
   utils::zip(
@@ -71,12 +72,16 @@ test_that("extraction preserves complete intersecting geometries", {
     geometry = sf::st_sfc(crossing[[1]], outside, crs = 4674)
   )
   root <- withr::local_tempdir()
-  archive <- make_source_zip(source, root)
+  archive <- make_source_zip(source, root, "PE_APPS.zip")
 
   result <- sicar_extract_municipality("Recife", archive)
 
   expect_s3_class(result, "sf")
   expect_identical(result$id, "crossing")
+  expect_identical(names(result)[1:2], c("filepath", "tema"))
+  expect_identical(result$filepath, normalizePath(archive))
+  expect_identical(file.exists(result$filepath), TRUE)
+  expect_identical(result$tema, "APPS")
   expect_length(sf::st_equals(result, source[1, ])[[1]], 1L)
   expect_identical(sf::st_crs(result)$epsg, 4674L)
 })
@@ -103,6 +108,7 @@ test_that("boundary contact is included by st_intersects", {
   result <- sicar_extract_municipality("Recife", archive)
 
   expect_identical(result$id, "boundary")
+  expect_identical(result$tema, NA_character_)
 })
 
 test_that("empty selections retain the source schema and CRS", {
@@ -130,7 +136,12 @@ test_that("empty selections retain the source schema and CRS", {
 
   expect_s3_class(result, "sf")
   expect_identical(nrow(result), 0L)
-  expect_identical(names(result), names(source))
+  expect_identical(
+    names(result),
+    c("filepath", "tema", "id", "label", "geometry")
+  )
+  expect_identical(result$filepath, character(0))
+  expect_identical(result$tema, character(0))
   expect_identical(sf::st_crs(result)$epsg, 4674L)
 })
 
@@ -177,13 +188,23 @@ test_that("multiple source ZIPs and municipalities are combined once", {
     geometry = sf::st_as_sfc(combined)
   )
   root <- withr::local_tempdir()
-  make_source_zip(source, root, "first.zip")
-  make_source_zip(source, root, "second.zip")
+  make_source_zip(source, root, "PE_APPS.zip", layer_name = "APPS_1")
+  make_source_zip(
+    source,
+    root,
+    "second.zip",
+    layer_name = "AREA_IMOVEL_1"
+  )
 
   result <- sicar_extract_municipality(c("Recife", "Olinda"), root)
 
   expect_identical(nrow(result), 2L)
   expect_identical(result$id, c("shared", "shared"))
+  expect_identical(
+    result$filepath,
+    normalizePath(file.path(root, c("PE_APPS.zip", "second.zip")))
+  )
+  expect_identical(result$tema, c("APPS", "AREA_IMOVEL"))
 })
 
 test_that("reading a source ZIP skips features outside the AOI bbox", {

@@ -111,6 +111,18 @@
   sf::st_as_text(transformed)
 }
 
+.sicar_source_theme <- function(shapefile, zip_path) {
+  for (path in c(shapefile, zip_path)) {
+    stem <- toupper(tools::file_path_sans_ext(basename(path)))
+    stem <- sub("^[A-Z]{2}_", "", stem)
+    stem <- sub("_[0-9]+$", "", stem)
+    if (stem %in% .sicar_polygons) {
+      return(stem)
+    }
+  }
+  NA_character_
+}
+
 .sicar_read_source_zip <- function(zip_path, aoi = NULL) {
   extracted <- withr::local_tempdir("rsicar-source-")
   tryCatch(
@@ -169,7 +181,10 @@
       )
     }
 
-    .sicar_repair_invalid_geometries(source, zip_path, path)
+    source <- .sicar_repair_invalid_geometries(source, zip_path, path)
+    source$filepath <- rep(zip_path, nrow(source))
+    source$tema <- rep(.sicar_source_theme(path, zip_path), nrow(source))
+    source
   })
 }
 
@@ -222,7 +237,12 @@
   }
 
   columns <- unique(unlist(lapply(layers, names), use.names = FALSE))
-  columns <- c(setdiff(columns, "geometry"), "geometry")
+  columns <- c(
+    "filepath",
+    "tema",
+    setdiff(columns, c("filepath", "tema", "geometry")),
+    "geometry"
+  )
   layers <- lapply(layers, function(layer) {
     missing <- setdiff(columns, names(layer))
     for (name in missing) {
@@ -281,7 +301,11 @@
 #' Reads shapefiles from one ZIP archive or recursively from a source
 #' directory, then keeps every SICAR feature that intersects at least one
 #' requested municipality. The original SICAR geometries and attributes are
-#' returned unchanged; the function does not clip or write files.
+#' returned without clipping or writing files. Two source columns are added:
+#' `filepath` is the absolute path of the source ZIP archive, and `tema` is
+#' the matching value from [sicar_polygon_types()]. These are the first two
+#' attribute columns. If neither the shapefile nor its ZIP archive has a
+#' recognized theme in its name, `tema` is `NA`.
 #'
 #' @param x One or more identifiers accepted by
 #'   [sicar_resolve_municipality()].
@@ -290,7 +314,8 @@
 #'
 #' @returns An `sf` object containing the selected original SICAR features.
 #'   If no source feature intersects the requested municipalities, the result
-#'   has zero rows and retains the source schema.
+#'   has zero rows and retains the source schema, including `filepath` and
+#'   `tema`.
 #' @family municipality extraction
 #' @examples
 #' \dontrun{

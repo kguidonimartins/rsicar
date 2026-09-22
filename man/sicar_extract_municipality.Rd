@@ -16,13 +16,18 @@ ZIP archives. Directory contents are searched recursively.}
 \value{
 An \code{sf} object containing the selected original SICAR features.
 If no source feature intersects the requested municipalities, the result
-has zero rows and retains the source schema.
+has zero rows and retains the source schema, including \code{filepath} and
+\code{tema}.
 }
 \description{
 Reads shapefiles from one ZIP archive or recursively from a source
 directory, then keeps every SICAR feature that intersects at least one
 requested municipality. The original SICAR geometries and attributes are
-returned unchanged; the function does not clip or write files.
+returned without clipping or writing files. Two source columns are added:
+\code{filepath} is the absolute path of the source ZIP archive, and \code{tema} is
+the matching value from \code{\link[=sicar_polygon_types]{sicar_polygon_types()}}. These are the first two
+attribute columns. If neither the shapefile nor its ZIP archive has a
+recognized theme in its name, \code{tema} is \code{NA}.
 }
 \examples{
 \dontrun{

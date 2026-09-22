@@ -1,5 +1,8 @@
 # rsicar 0.0.0.9000
 
+* `sicar_extract_municipality()` now adds `filepath` with the absolute source
+  ZIP path and `tema` with its recognized SICAR polygon type as the first two
+  attribute columns.
 * `sicar_resolve_municipality()` now names its result `"Municipality/UF"`,
   so each returned IBGE code can be traced back to the municipality it came
   from.
