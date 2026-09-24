@@ -25,3 +25,18 @@ test_that("release dates reject invalid dates", {
     class = "rsicar_parse_error"
   )
 })
+
+test_that("release dates accept an already parsed document", {
+  result <- rsicar:::.sicar_parse_release_dates(
+    xml2::read_html(release_fixture())
+  )
+
+  expect_length(result$state, 27)
+})
+
+test_that("sicar_release_dates validates the client", {
+  expect_error(
+    sicar_release_dates("not-a-client"),
+    class = "rsicar_invalid_argument"
+  )
+})

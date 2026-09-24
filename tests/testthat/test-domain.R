@@ -74,3 +74,33 @@ test_that("state validation also accepts multiple values", {
     class = "rsicar_invalid_argument"
   )
 })
+
+test_that("clients reject invalid configuration", {
+  error <- rlang::catch_cnd(sicar_client(solver = function(path) "ABCDE"))
+  expect_s3_class(error, "rsicar_invalid_argument")
+  expect_identical(error$field, "solver")
+
+  for (headers in list("value", c(a = "x", "y"), list(a = "x"))) {
+    error <- rlang::catch_cnd(sicar_client(headers = headers))
+    expect_s3_class(error, "rsicar_invalid_argument")
+    expect_identical(error$field, "headers")
+  }
+
+  for (timeout in list(0, -1, NA_real_, "60", c(1, 2))) {
+    error <- rlang::catch_cnd(sicar_client(timeout = timeout))
+    expect_s3_class(error, "rsicar_invalid_argument")
+    expect_identical(error$field, "timeout")
+  }
+})
+
+test_that("single-value domain validation rejects vectors and missing values", {
+  expect_error(
+    rsicar:::.sicar_validate_state(c("PA", "AC")),
+    "must be a single non-missing character value",
+    class = "rsicar_invalid_argument"
+  )
+  expect_error(
+    rsicar:::.sicar_validate_polygon(NA_character_),
+    class = "rsicar_invalid_argument"
+  )
+})

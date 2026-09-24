@@ -323,3 +323,185 @@ test_that("invalid source geometries are repaired with st_make_valid()", {
   expect_identical(result$id, "invalid")
   expect_true(all(sf::st_is_valid(result)))
 })
+
+unit_square <- function(offset = 0) {
+  sf::st_polygon(list(rbind(
+    c(offset, 0),
+    c(offset + 1, 0),
+    c(offset + 1, 1),
+    c(offset, 1),
+    c(offset, 0)
+  )))
+}
+
+bowtie <- function() {
+  sf::st_polygon(list(rbind(c(0, 0), c(1, 1), c(1, 0), c(0, 1), c(0, 0))))
+}
+
+test_that("planar invalid geometries are repaired without disabling s2", {
+  source <- sf::st_sf(id = 1, geometry = sf::st_sfc(bowtie(), crs = 3857))
+
+  repaired <- rsicar:::.sicar_make_valid(source)
+
+  expect_true(all(sf::st_is_valid(repaired)))
+})
+
+test_that("geometry repair failures are classified", {
+  source <- sf::st_sf(id = 1, geometry = sf::st_sfc(bowtie(), crs = 4674))
+  testthat::local_mocked_bindings(
+    .sicar_make_valid = function(source) stop("GEOS exception"),
+    .package = "rsicar"
+  )
+
+  error <- rlang::catch_cnd(
+    rsicar:::.sicar_repair_invalid_geometries(source, "src.zip", "layer.shp")
+  )
+
+  expect_s3_class(error, "rsicar_spatial_error")
+  expect_identical(error$path, "src.zip")
+  expect_identical(error$layer, "layer.shp")
+})
+
+test_that("geometries that remain invalid after repair are rejected", {
+  source <- sf::st_sf(id = 1, geometry = sf::st_sfc(bowtie(), crs = 4674))
+  testthat::local_mocked_bindings(
+    .sicar_make_valid = function(source) source,
+    .package = "rsicar"
+  )
+
+  error <- rlang::catch_cnd(
+    rsicar:::.sicar_repair_invalid_geometries(source, "src.zip", "layer.shp")
+  )
+
+  expect_s3_class(error, "rsicar_spatial_error")
+  expect_identical(error$n_unrepaired, 1L)
+})
+
+test_that("an empty municipality selection has no AOI", {
+  municipalities <- test_municipality_geometries()[0, ]
+
+  expect_null(rsicar:::.sicar_aoi_bbox(municipalities))
+})
+
+test_that(".sicar_aoi_wkt_filter() skips filtering when the AOI cannot be transformed", {
+  directory <- withr::local_tempdir()
+  path <- file.path(directory, "sicar.shp")
+  sf::st_write(
+    sf::st_sf(id = "x", geometry = sf::st_sfc(unit_square(), crs = 4674)),
+    path,
+    quiet = TRUE
+  )
+  aoi_without_crs <- sf::st_sfc(unit_square())
+
+  expect_identical(
+    rsicar:::.sicar_aoi_wkt_filter(path, aoi_without_crs),
+    character(0)
+  )
+})
+
+test_that("source ZIPs that cannot be extracted are classified", {
+  testthat::local_mocked_bindings(
+    unzip = function(...) stop("bad archive"),
+    .package = "utils"
+  )
+
+  expect_error(
+    rsicar:::.sicar_read_source_zip("source.zip"),
+    "Could not extract",
+    class = "rsicar_source_error"
+  )
+})
+
+test_that("unreadable source shapefiles are classified", {
+  root <- withr::local_tempdir()
+  shapefile <- file.path(root, "broken.shp")
+  writeLines("not a shapefile", shapefile)
+  archive <- file.path(root, "source.zip")
+  utils::zip(archive, shapefile, flags = "-qj")
+
+  error <- rlang::catch_cnd(rsicar:::.sicar_read_source_zip(archive))
+
+  expect_s3_class(error, "rsicar_source_error")
+  expect_identical(basename(error$layer), "broken.shp")
+})
+
+test_that("geometry columns are renamed to `geometry`", {
+  named <- sf::st_sf(id = 1, geom = sf::st_sfc(unit_square(), crs = 4674))
+  plain <- data.frame(id = 1)
+  plain$geom <- sf::st_sfc(unit_square(), crs = 4674)
+
+  for (source in list(named, plain)) {
+    result <- rsicar:::.sicar_normalize_source_geometry_name(source)
+    expect_identical(names(result), c("id", "geometry"))
+    expect_identical(attr(result, "sf_column"), "geometry")
+  }
+})
+
+test_that("source layers with different CRSes cannot be combined", {
+  layers <- list(
+    sf::st_sf(id = 1, geometry = sf::st_sfc(unit_square(), crs = 4674)),
+    sf::st_sf(id = 2, geometry = sf::st_sfc(unit_square(), crs = 4326))
+  )
+
+  expect_error(
+    rsicar:::.sicar_bind_source_layers(layers),
+    "different coordinate reference systems",
+    class = "rsicar_spatial_error"
+  )
+})
+
+test_that("source layers with different attributes are filled with NA", {
+  layers <- list(
+    sf::st_sf(
+      filepath = "a.zip",
+      tema = "APPS",
+      first = "a",
+      geometry = sf::st_sfc(unit_square(), crs = 4674)
+    ),
+    sf::st_sf(
+      filepath = "b.zip",
+      tema = "APPS",
+      second = "b",
+      geometry = sf::st_sfc(unit_square(1), crs = 4674)
+    )
+  )
+
+  result <- rsicar:::.sicar_bind_source_layers(layers)
+
+  expect_identical(
+    names(result),
+    c("filepath", "tema", "first", "second", "geometry")
+  )
+  expect_identical(result$first, c("a", NA))
+  expect_identical(result$second, c(NA, "b"))
+})
+
+test_that("municipalities that cannot be transformed to the source CRS fail", {
+  source <- sf::st_sf(id = 1, geometry = sf::st_sfc(unit_square()))
+
+  expect_error(
+    rsicar:::.sicar_select_intersecting_features(
+      source,
+      test_municipality_geometries()
+    ),
+    "could not be transformed",
+    class = "rsicar_spatial_error"
+  )
+})
+
+test_that("intersection failures are classified", {
+  source <- sf::st_sf(id = 1, geometry = sf::st_sfc(unit_square(), crs = 4674))
+  testthat::local_mocked_bindings(
+    st_intersects = function(...) stop("GEOS exception"),
+    .package = "sf"
+  )
+
+  expect_error(
+    rsicar:::.sicar_select_intersecting_features(
+      source,
+      test_municipality_geometries()
+    ),
+    "Could not intersect",
+    class = "rsicar_spatial_error"
+  )
+})

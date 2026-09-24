@@ -123,3 +123,24 @@ test_that("server-signal statuses (5xx/429/408) back off exponentially", {
     expect_true(rsicar:::.sicar_slow_retry(error), info = as.character(status))
   }
 })
+
+test_that("transport failures are wrapped as slow, retryable HTTP errors", {
+  httr2::local_mocked_responses(function(req) stop("connection reset"))
+
+  error <- rlang::catch_cnd(
+    rsicar:::.sicar_perform(sicar_client(), "https://example.test")
+  )
+
+  expect_s3_class(error, "rsicar_http_error")
+  expect_identical(error$url, "https://example.test")
+  expect_true(rsicar:::.sicar_retryable(error))
+  expect_true(rsicar:::.sicar_slow_retry(error))
+})
+
+test_that("bootstrap is a no-op for an already bootstrapped client", {
+  client <- sicar_client()
+  client$state$bootstrapped <- TRUE
+  httr2::local_mocked_responses(function(req) stop("unexpected request"))
+
+  expect_invisible(rsicar:::.sicar_bootstrap(client))
+})

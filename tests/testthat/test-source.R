@@ -62,3 +62,11 @@ test_that("source validation rejects a truncated ZIP", {
     class = "rsicar_source_error"
   )
 })
+
+test_that("source validation rejects malformed src_dir values", {
+  for (src_dir in list(NA_character_, "  ", c("a.zip", "b.zip"), 1)) {
+    error <- rlang::catch_cnd(rsicar:::.sicar_source_files(src_dir))
+    expect_s3_class(error, "rsicar_invalid_argument")
+    expect_identical(error$field, "src_dir")
+  }
+})

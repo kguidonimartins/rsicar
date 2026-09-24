@@ -221,3 +221,79 @@ test_that("sicar_download_country_status aggregates one manifest per state", {
   expect_identical(status$status[status$state == "PA"], "downloaded")
   expect_identical(status$status[status$state == "AC"], "missing")
 })
+
+test_that("a corrupted manifest is reported with its path", {
+  destination <- withr::local_tempdir()
+  writeLines("{not json", file.path(destination, "manifest.json"))
+
+  error <- rlang::catch_cnd(sicar_read_manifest(destination))
+
+  expect_s3_class(error, "rsicar_manifest_error")
+  expect_identical(error$path, file.path(destination, "manifest.json"))
+})
+
+test_that("a manifest without a downloads field reads as empty", {
+  destination <- withr::local_tempdir()
+  writeLines('{"schema_version": 1}', file.path(destination, "manifest.json"))
+
+  expect_identical(nrow(sicar_read_manifest(destination)), 0L)
+})
+
+test_that("overwriting a download replaces its manifest entry", {
+  client <- sicar_client(solver = sicar_solver_function(function(path) "ABCDE"))
+  destination <- withr::local_tempdir()
+  sicar_download_state(
+    client,
+    "PA",
+    "APPS",
+    destination,
+    tries = 1,
+    attempt_download = .fake_zip_attempt()
+  )
+
+  sicar_download_state(
+    client,
+    "PA",
+    "APPS",
+    destination,
+    overwrite = TRUE,
+    tries = 1,
+    attempt_download = .fake_zip_attempt()
+  )
+
+  manifest <- sicar_read_manifest(destination)
+  expect_identical(nrow(manifest), 1L)
+  expect_true(manifest$overwrite)
+})
+
+test_that("reusing a recorded archive keeps its manifest entry", {
+  client <- sicar_client(solver = sicar_solver_function(function(path) "ABCDE"))
+  destination <- withr::local_tempdir()
+  sicar_download_state(
+    client,
+    "PA",
+    "APPS",
+    destination,
+    tries = 2,
+    attempt_download = .fake_zip_attempt()
+  )
+  before <- sicar_read_manifest(destination)
+
+  sicar_download_state(
+    client,
+    "PA",
+    "APPS",
+    destination,
+    tries = 5,
+    attempt_download = function(...) stop("should not be called")
+  )
+
+  expect_identical(sicar_read_manifest(destination), before)
+})
+
+test_that("sicar_download_country_status validates dest_dir", {
+  expect_error(
+    sicar_download_country_status(NA_character_),
+    class = "rsicar_invalid_argument"
+  )
+})

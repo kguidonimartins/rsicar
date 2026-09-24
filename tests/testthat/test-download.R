@@ -360,3 +360,119 @@ test_that("state downloads validate and atomically rename a ZIP", {
   expect_true(file.exists(result))
   expect_identical(client$state$bootstrapped, TRUE)
 })
+
+test_that("missing and empty downloads are rejected", {
+  empty_path <- withr::local_tempfile(fileext = ".zip")
+  file.create(empty_path)
+
+  expect_error(
+    rsicar:::.sicar_validate_zip(empty_path),
+    "empty or missing",
+    class = "rsicar_download_error"
+  )
+  expect_error(
+    rsicar:::.sicar_validate_zip(tempfile(fileext = ".zip")),
+    "empty or missing",
+    class = "rsicar_download_error"
+  )
+})
+
+test_that("ZIP transport failures are slow, retryable download errors", {
+  httr2::local_mocked_responses(function(req) stop("connection reset"))
+
+  error <- rlang::catch_cnd(
+    rsicar:::.sicar_download_zip(
+      sicar_client(),
+      "https://example.test/download",
+      withr::local_tempfile(fileext = ".zip")
+    )
+  )
+
+  expect_s3_class(error, "rsicar_download_error")
+  expect_true(rsicar:::.sicar_retryable(error))
+  expect_true(rsicar:::.sicar_slow_retry(error))
+})
+
+test_that("overwrite replaces an existing archive", {
+  destination <- withr::local_tempdir()
+  existing <- file.path(destination, "PA_APPS.zip")
+  writeLines("stale", existing)
+  calls <- 0L
+  fake_attempt <- function(client, state, polygon, dest_dir) {
+    calls <<- calls + 1L
+    fixture <- file.path(dest_dir, "temporary.zip")
+    source <- tempfile(fileext = ".txt")
+    writeLines("fixture", source)
+    utils::zip(fixture, source, flags = "-q")
+    fixture
+  }
+
+  result <- sicar_download_state(
+    sicar_client(),
+    "PA",
+    "APPS",
+    destination,
+    overwrite = TRUE,
+    tries = 1,
+    attempt_download = fake_attempt
+  )
+
+  expect_identical(calls, 1L)
+  expect_identical(result, normalizePath(existing))
+  expect_invisible(rsicar:::.sicar_validate_zip(result))
+})
+
+test_that("a download that cannot be moved into place fails", {
+  fake_attempt <- function(client, state, polygon, dest_dir) {
+    file.path(dest_dir, "vanished.zip")
+  }
+
+  expect_error(
+    suppressWarnings(sicar_download_state(
+      sicar_client(),
+      "PA",
+      "APPS",
+      withr::local_tempdir(),
+      tries = 1,
+      attempt_download = fake_attempt
+    )),
+    "could not be moved",
+    class = "rsicar_download_error"
+  )
+})
+
+test_that("sicar_download_state validates its arguments", {
+  client <- sicar_client()
+  destination <- withr::local_tempdir()
+  download <- function(...) {
+    sicar_download_state(
+      ...,
+      attempt_download = function(...) stop("should not be called")
+    )
+  }
+
+  expect_error(
+    download("not-a-client", "PA", "APPS", destination),
+    class = "rsicar_invalid_argument"
+  )
+  expect_error(
+    download(client, "PA", "APPS", NA_character_),
+    class = "rsicar_invalid_argument"
+  )
+  for (tries in list(0, NA_real_, "3", c(1, 2))) {
+    expect_error(
+      download(client, "PA", "APPS", destination, tries = tries),
+      class = "rsicar_invalid_argument"
+    )
+  }
+  expect_error(
+    download(client, "PA", "APPS", destination, wait = "sleep"),
+    class = "rsicar_invalid_argument"
+  )
+  for (overwrite in list(NA, "yes", c(TRUE, FALSE))) {
+    expect_error(
+      download(client, "PA", "APPS", destination, overwrite = overwrite),
+      class = "rsicar_invalid_argument"
+    )
+  }
+})

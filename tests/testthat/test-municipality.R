@@ -63,3 +63,60 @@ test_that("invalid municipality identifiers produce classified errors", {
     sicar_resolve_municipality("Municipio/XX")
   )
 })
+
+test_that("seven-digit IBGE codes resolve as character or numeric input", {
+  expect_identical(
+    sicar_resolve_municipality("2611606"),
+    c("Recife/PE" = "2611606")
+  )
+  expect_identical(
+    sicar_resolve_municipality(2611606),
+    c("Recife/PE" = "2611606")
+  )
+})
+
+test_that("unknown municipality codes and names abort in strict mode", {
+  expect_error(
+    sicar_resolve_municipality("9999999"),
+    "code not found",
+    class = "rsicar_unknown_municipality"
+  )
+  expect_error(
+    sicar_resolve_municipality("municipio inexistente"),
+    "not found in the catalog",
+    class = "rsicar_unknown_municipality"
+  )
+})
+
+test_that("malformed municipality identifiers are rejected", {
+  for (x in c("  ", "Recife/PE/BR", "/PE", "Recife/")) {
+    expect_error(
+      sicar_resolve_municipality(x),
+      class = "rsicar_invalid_argument"
+    )
+  }
+})
+
+test_that("sicar_resolve_municipality validates its arguments", {
+  expect_error(
+    sicar_resolve_municipality(character(0)),
+    class = "rsicar_invalid_argument"
+  )
+  expect_error(
+    sicar_resolve_municipality(TRUE),
+    class = "rsicar_invalid_argument"
+  )
+  expect_error(
+    sicar_resolve_municipality(c("Recife", NA)),
+    "missing municipality identifiers",
+    class = "rsicar_invalid_argument"
+  )
+  for (strict in list(NA, "yes", c(TRUE, FALSE))) {
+    error <- rlang::catch_cnd(sicar_resolve_municipality(
+      "Recife",
+      strict = strict
+    ))
+    expect_s3_class(error, "rsicar_invalid_argument")
+    expect_identical(error$field, "strict")
+  }
+})

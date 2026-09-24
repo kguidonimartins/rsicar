@@ -89,3 +89,39 @@ test_that("tesseract solver checks optional dependencies", {
   expect_s3_class(solver, "sicar_solver")
   expect_identical(solver$name, "tesseract")
 })
+
+test_that("custom solvers must return one non-missing character value", {
+  for (value in list(NA_character_, c("ABCDE", "FGHIJ"), 12345, NULL)) {
+    solver <- sicar_solver_function(function(path) value)
+    expect_error(
+      rsicar:::.sicar_solve(solver, "captcha.png"),
+      "must return one non-missing character value",
+      class = "rsicar_solver_error"
+    )
+  }
+})
+
+test_that("function solvers require a function", {
+  expect_error(
+    sicar_solver_function("ABCDE"),
+    class = "rsicar_invalid_argument"
+  )
+})
+
+test_that("tesseract solver preprocesses and reads a CAPTCHA image", {
+  skip_on_cran()
+  skip_if_not_installed("magick")
+  skip_if_not_installed("tesseract")
+
+  path <- withr::local_tempfile(fileext = ".png")
+  magick::image_blank(160, 50, color = "white") |>
+    magick::image_annotate("AB12C", size = 32, gravity = "center") |>
+    magick::image_write(path, format = "png")
+
+  preprocessed <- rsicar:::.sicar_tesseract_preprocess(path)
+  expect_s3_class(preprocessed, "magick-image")
+
+  recognized <- sicar_solver_tesseract()$solve(path)
+  expect_type(recognized, "character")
+  expect_match(recognized, "^[A-Za-z0-9]*$")
+})
