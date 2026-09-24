@@ -1,6 +1,13 @@
 rsicar
 ================
 
+<!-- badges: start -->
+
+[![R-CMD-check](https://github.com/kguidonimartins/rsicar/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/kguidonimartins/rsicar/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/kguidonimartins/rsicar/graph/badge.svg)](https://app.codecov.io/gh/kguidonimartins/rsicar)
+<!-- badges: end -->
+
 Cliente R nativo para consultar e baixar dados públicos do Sistema
 Nacional de Cadastro Ambiental Rural (SICAR).
 

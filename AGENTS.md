@@ -20,6 +20,8 @@ make document       # devtools::document()
 make tests          # devtools::test() -> out-testthat.txt
 make check          # devtools::check() -> out-check.txt
 make format         # air format .
+make coverage       # covr::package_coverage() -> out-coverage.txt
+make coverage-report # interactive covr HTML report
 make examples       # devtools::run_examples() -> out-examples.txt
 make render         # render README.Rmd
 make site           # build the pkgdown site, when configured
@@ -113,9 +115,11 @@ test_that("descriptive behavior", {
 
 ## CI
 
-CI is not configured yet. The planned matrix covers R release/devel on Linux,
-macOS, and Windows. Ordinary CI must be offline and deterministic; live contract
-tests belong in a low-frequency scheduled or manually triggered job.
+GitHub Actions runs `R-CMD-check` on R release/devel across Linux, macOS, and
+Windows, and `test-coverage` on Linux, which uploads covr results to Codecov
+(requires the `CODECOV_TOKEN` repository secret). Ordinary CI must be offline
+and deterministic; live contract tests belong in a low-frequency scheduled or
+manually triggered job.
 
 ## Domain notes
 

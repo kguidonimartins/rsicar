@@ -1,3 +1,7 @@
 /ref/SICAR/
 /out-check.txt
 /out-testthat.txt
+/out-coverage.txt
+/cobertura.xml
+/README.html
+/out-check-fast.txt

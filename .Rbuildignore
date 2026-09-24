@@ -28,6 +28,8 @@
 ^out-check-cran\.txt$
 ^out-examples\.txt$
 ^out-testthat\.txt$
+^out-coverage\.txt$
+^cobertura\.xml$
 ^out-gp\.txt$
 ^out-eg\.txt$
 ^TODO\.md$

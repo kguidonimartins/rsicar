@@ -5,7 +5,8 @@ PKGNAME := $(shell sed -n "s/^Package: *\([^ ]*\)/\1/p" DESCRIPTION 2>/dev/null)
 PKGVERS := $(shell sed -n "s/^Version: *\([^ ]*\)/\1/p" DESCRIPTION 2>/dev/null)
 
 .PHONY: help require-package install_deps document format tests test examples build \
-	check check-fast check-cran install quick-install clean render site live-tests all
+	check check-fast check-cran coverage coverage-report install quick-install clean render site \
+	live-tests all
 
 require-package:
 	@test -f DESCRIPTION || { echo "DESCRIPTION not found; create the package skeleton first."; exit 1; }
@@ -40,6 +41,12 @@ check-fast: require-package ## run a fast development check without the large ca
 
 check-cran: require-package ## run a CRAN-like check without a PDF manual
 	$(R) -e "Sys.setenv('_R_CHECK_SYSTEM_CLOCK_' = 0); devtools::check(cran = TRUE, args = '--no-manual')" 2>&1 | tee out-check-cran.txt
+
+coverage: require-package ## measure offline test coverage with covr
+	NOT_CRAN=true $(R) -e 'cov <- covr::package_coverage(); print(cov)' 2>&1 | tee out-coverage.txt
+
+coverage-report: require-package ## open an interactive covr HTML report
+	NOT_CRAN=true $(R) -e 'covr::report(covr::package_coverage(), browse = TRUE)'
 
 install: install_deps build ## install the built source package
 	cd .. && R CMD INSTALL $(PKGNAME)_$(PKGVERS).tar.gz
