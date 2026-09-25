@@ -1,0 +1,10 @@
+id,path,expected,split,protect
+upstream-AbgBy,upstream/AbgBy.png,AbgBy,development,TRUE
+upstream-Ca7Qk,upstream/Ca7Qk.png,Ca7Qk,development,TRUE
+upstream-n3aoD,upstream/n3aoD.png,n3aoD,development,TRUE
+upstream-qMT5V,upstream/qMT5V.png,qMT5V,development,FALSE
+upstream-sgffr,upstream/sgffr.png,sgffr,development,FALSE
+upstream-ZS7pc,upstream/ZS7pc.png,ZS7pc,development,TRUE
+current-QEHFA,current/QEHFA.png,QEHFA,development,TRUE
+current-b2aSQ,current/b2aSQ.png,b2aSQ,development,TRUE
+current-vgG5M,current/vgG5M.png,vgG5M,development,TRUE

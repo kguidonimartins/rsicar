@@ -38,3 +38,23 @@ solver <- rsicar::sicar_solver_tesseract()
 
 Saídas vazias, inválidas ou com comprimento diferente de cinco geram um erro
 estruturado, em vez de serem enviadas ao endpoint de download.
+
+Para investigar falhas durante downloads, ative o diagnóstico:
+
+```r
+solver <- rsicar::sicar_solver_tesseract(
+  diagnostics_dir = "captcha-diagnostics"
+)
+client <- rsicar::sicar_client(solver = solver)
+```
+
+Cada leitura salva o PNG original e um JSON com as duas previsões, suas
+confianças, o tempo de processamento, a resposta escolhida e as versões do
+Tesseract e do modelo de idioma. Leituras incompletas também são salvas.
+Os valores de confiança são pontuações do OCR, não probabilidades de acerto.
+O JSON não confirma que o SICAR aceitou a resposta. Por padrão, nenhum
+diagnóstico é gravado; falhas de gravação emitem um aviso e a leitura continua.
+
+O repositório contém ferramentas para rotular essas imagens no navegador,
+comparar configurações offline e avaliar uma configuração congelada em
+imagens reservadas. O fluxo está documentado em `tools/TESSERACT.md`.

@@ -1,12 +1,14 @@
 .DEFAULT_GOAL := help
 
 R := Rscript --no-init-file
+OCR_MANIFEST ?= tests/testthat/fixtures/captchas/manifest.csv
+OCR_OUTPUT ?= .scratch/tesseract-benchmark
 PKGNAME := $(shell sed -n "s/^Package: *\([^ ]*\)/\1/p" DESCRIPTION 2>/dev/null)
 PKGVERS := $(shell sed -n "s/^Version: *\([^ ]*\)/\1/p" DESCRIPTION 2>/dev/null)
 
 .PHONY: help require-package install_deps document format tests test examples build \
 	check check-fast check-cran coverage coverage-report install quick-install clean render site \
-	live-tests all
+	live-tests ocr-benchmark ocr-regression all
 
 require-package:
 	@test -f DESCRIPTION || { echo "DESCRIPTION not found; create the package skeleton first."; exit 1; }
@@ -70,6 +72,12 @@ site: require-package ## build the pkgdown site
 
 live-tests: require-package ## run opt-in, low-volume SICAR contract tests
 	$(R) -e "Sys.setenv(RSICAR_RUN_LIVE_TESTS = 'true'); devtools::test(filter = 'live')" 2>&1 | tee out-live-tests.txt
+
+ocr-benchmark: require-package ## compare OCR settings offline on development images
+	$(R) tools/benchmark-tesseract.R tune "$(OCR_MANIFEST)" "$(OCR_OUTPUT)"
+
+ocr-regression: require-package ## check protected OCR cases on the installed engine
+	RSICAR_RUN_OCR_REGRESSION=true $(R) -e "devtools::test(filter = 'solver-tesseract', stop_on_failure = TRUE)"
 
 all: install tests check ## install dependencies, build, install, test, and check
 

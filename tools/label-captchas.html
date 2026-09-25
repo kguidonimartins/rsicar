@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Revisão de CAPTCHAs — rsicar</title>
+<style>
+body { font: 17px system-ui,sans-serif; margin: 2rem auto; max-width: 1100px; padding: 0 1rem; background: #f4f6f8; color: #182331 }
+header { position: sticky; top: 0; background: #f4f6f8; padding: 1rem 0; z-index: 1; border-bottom: 1px solid #cbd5e1 }
+h1 { font-size: 1.5rem; margin: 0 0 .6rem }
+button,.import { padding: .6rem 1rem; border: 1px solid #42637a; border-radius: 5px; background: white; cursor: pointer; font: inherit }
+button { background: #174e70; color: white }
+main { display: grid; grid-template-columns: repeat(auto-fit,minmax(310px,1fr)); gap: 1rem; margin-top: 1rem }
+article { background: white; border: 1px solid #d3dde6; border-radius: 8px; padding: 1rem }
+img { width: 100%; max-width: 450px; height: auto; background: white; display: block }
+input.answer { font: 24px monospace; width: 9ch; padding: .4rem; margin-top: .6rem; border: 1px solid #8796a5; border-radius: 3px }
+input.answer:invalid { border: 2px solid #ba3540 }
+small { display: block; color: #536575; overflow-wrap: anywhere }
+#status { margin-left: .7rem }
+</style>
+<header>
+<h1>Revise os cinco caracteres de cada imagem</h1>
+<p>Preserve maiúsculas e minúsculas. Deixe vazio quando não tiver certeza.
+As respostas são transcrições visuais; não foram confirmadas pelo SICAR.</p>
+<button id="save">Exportar manifest.csv</button>
+<label class="import">Importar CSV <input type="file" id="load" accept=".csv" hidden></label>
+<span id="status" aria-live="polite"></span>
+<p id="split"></p>
+<small>Exporte antes de fechar esta página. Para usar os rótulos no benchmark,
+substitua o manifest.csv da pasta da amostra pelo arquivo exportado.</small>
+</header>
+<main id="cards"></main>
+<script type="application/json" id="data">__CORPUS_DATA__</script>
+<script>
+const corpus = JSON.parse(document.getElementById('data').textContent);
+const rows = corpus.rows;
+const byId = new Map(rows.map(row => [row.id,row]));
+const inputs = new Map();
+const pattern = /^[A-Za-z0-9]{5}$/;
+document.getElementById('split').textContent = corpus.split === 'development'
+  ? 'Conjunto de desenvolvimento — usado para escolher configurações.'
+  : 'Conjunto de avaliação — use a configuração já congelada.';
+function update() {
+  let labeled = 0;
+  for (const [id,input] of inputs) {
+    byId.get(id).expected = input.value;
+    if (pattern.test(input.value)) labeled++;
+  }
+  document.getElementById('status').textContent = `${labeled}/${inputs.size} rotulados`;
+}
+for (const image of corpus.images) {
+  const card = document.createElement('article');
+  const caption = document.createElement('small'); caption.textContent = image.id;
+  const img = document.createElement('img'); img.src = 'data:image/png;base64,' + image.png;
+  img.alt = 'CAPTCHA a transcrever';
+  const input = document.createElement('input'); input.className = 'answer';
+  input.type = 'text'; input.maxLength = 5; input.pattern = '[A-Za-z0-9]{5}';
+  input.setAttribute('aria-label', 'Resposta para ' + image.id);
+  input.autocomplete = 'off'; input.spellcheck = false; input.autocapitalize = 'off';
+  input.value = byId.get(image.id).expected || '';
+  input.addEventListener('input',update); inputs.set(image.id,input);
+  card.append(caption,img,input); document.getElementById('cards').append(card);
+}
+const columns = ['id','path','expected','split','protect'];
+const quote = value => '"' + String(value ?? '').replaceAll('"','""') + '"';
+document.getElementById('save').onclick = () => {
+  update();
+  for (const input of inputs.values()) {
+    if (input.value && !pattern.test(input.value)) { input.reportValidity(); return; }
+  }
+  const csv = [columns.join(','), ...rows.map(row => columns.map(col=>quote(row[col])).join(','))].join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));
+  const link = document.createElement('a'); link.href = url; link.download = 'manifest.csv';
+  link.click(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+function parseCSV(text) {
+  const output=[]; let row=[],cell='',quoted=false;
+  for (let i=0;i<text.length;i++) {
+    const ch=text[i];
+    if(ch==='"') { if(quoted && text[i+1]==='"') { cell+='"'; i++; } else quoted=!quoted; }
+    else if(!quoted && ch===',') { row.push(cell); cell=''; }
+    else if(!quoted && ch==='\n') { row.push(cell.replace(/\r$/,'')); output.push(row); row=[]; cell=''; }
+    else cell+=ch;
+  }
+  if(cell || row.length) { row.push(cell.replace(/\r$/,'')); output.push(row); }
+  return output;
+}
+document.getElementById('load').onchange = async event => {
+  const file=event.target.files[0]; if(!file) return;
+  const parsed=parseCSV(await file.text()); const header=parsed.shift() || [];
+  const idIndex=header.indexOf('id'), expectedIndex=header.indexOf('expected');
+  if(idIndex<0 || expectedIndex<0) { alert('CSV precisa das colunas id e expected.'); return; }
+  if(parsed.some(row=>!byId.has(row[idIndex]))) {
+    alert('O CSV contém imagens novas. Gere novamente a página usando o manifesto atualizado.'); return;
+  }
+  if(parsed.some(row=>row[expectedIndex] && !pattern.test(row[expectedIndex]))) {
+    alert('Há respostas inválidas. Use cinco caracteres alfanuméricos ou deixe vazio.'); return;
+  }
+  for(const row of parsed) {
+    const id=row[idIndex], answer=row[expectedIndex] || '';
+    byId.get(id).expected=answer;
+    if(inputs.has(id)) inputs.get(id).value=answer;
+  }
+  update();
+};
+update();
+</script>
+</html>

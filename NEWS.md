@@ -33,6 +33,15 @@
   response validation, and defensive HTML date parsing.
 * Added `sicar_solver_tesseract()` as an optional, experimental CAPTCHA solver;
   manual and user-defined solvers remain available without OCR dependencies.
+* Improved `sicar_solver_tesseract()` preprocessing to match the upstream
+  OpenCV threshold and morphology more closely, with a second OCR pass that
+  reduces the red interference line. Added offline CAPTCHA fixtures to track
+  recognition regressions. The solver remains experimental.
+* `sicar_solver_tesseract()` now optionally saves input images and candidate
+  diagnostics with `diagnostics_dir`. Offline benchmark tools compare OCR
+  settings and confidence margins, reserve evaluation images, and record
+  engine and language-model versions. Accuracy checks protect individual
+  solved cases and allow additional successes across Tesseract versions.
 * Added `sicar_download_state()` and `sicar_download_country()` with ZIP
   validation, safe temporary files, resumable existing outputs, and per-state
   failure reporting.
@@ -61,14 +70,6 @@
   expected to miss sometimes, so a generous, fast-retrying budget is what
   makes `sicar_solver_tesseract()` succeed automatically without help,
   rather than one-shot OCR accuracy alone.
-* Improved `sicar_solver_tesseract()` accuracy by switching Tesseract's page
-  segmentation mode from 7 (single text line) to 8 (single word); it remains
-  experimental. On real, live SICAR CAPTCHAs (harder than the upstream
-  reference's cached fixtures) its single-attempt accuracy is still low, so
-  `sicar_download_state()`'s larger retry budget matters more than ever;
-  prefer `sicar_solver_manual()` or a custom `sicar_solver_function()`
-  (for example wrapping a paid CAPTCHA-solving API) where reliability
-  matters.
 * Renamed structured condition classes to the `rsicar_*` prefix.
 * `sicar_download_state()`'s `polygon` argument now accepts a character
   vector to download several polygon types for a state in one call. All

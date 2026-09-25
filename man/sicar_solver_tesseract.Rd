@@ -4,28 +4,38 @@
 \alias{sicar_solver_tesseract}
 \title{Create a CAPTCHA solver backed by Tesseract OCR}
 \usage{
-sicar_solver_tesseract()
+sicar_solver_tesseract(diagnostics_dir = NULL)
+}
+\arguments{
+\item{diagnostics_dir}{Optional directory in which to save each input PNG
+and a JSON record of both readings, confidence scores, timing, selection
+and OCR environment. Defaults to \code{NULL} (no files). These records contain
+predictions, not verified CAPTCHA answers or download outcomes. Files are
+saved before answer validation, so incomplete readings are retained too.
+A write failure emits an \code{rsicar_diagnostics_warning} and solving continues.}
 }
 \value{
 An object usable as the \code{solver} argument of \code{sicar_client()}.
 }
 \description{
 The optional \code{magick} and \code{tesseract} packages are checked when this solver
-is created. The solver applies grayscale conversion, thresholding and
-morphology before using Tesseract page segmentation mode 8 (single word).
+is created. The solver applies grayscale conversion, Otsu truncation and
+morphology before using Tesseract page segmentation mode 7 (single line).
+It also reads an enlarged red channel to reduce the red interference line,
+using that answer when the first pass is incomplete or the second has much
+higher OCR confidence.
 }
 \details{
-This solver is experimental. On the upstream reference's own CAPTCHA
-fixtures it currently recognizes 2 of 3 correctly; occasional confusion
-between visually similar characters (for example \code{Z}/\code{2}) can still cause
-rejected CAPTCHAs, which \code{sicar_download_state()} retries. Prefer
-\code{sicar_solver_manual()} or a custom \code{sicar_solver_function()} where
-accuracy matters.
+This solver is experimental. Tesseract can still confuse similar characters
+or return an incomplete answer; \code{sicar_download_state()} retries rejected
+CAPTCHAs. Prefer \code{sicar_solver_manual()} or a custom
+\code{sicar_solver_function()} where accuracy matters.
 }
 \examples{
 \dontrun{
 # Requires the optional `magick` and `tesseract` R packages and the
 # Tesseract OCR program installed on the system.
 solver <- sicar_solver_tesseract()
+solver <- sicar_solver_tesseract(diagnostics_dir = "captcha-diagnostics")
 }
 }
