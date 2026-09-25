@@ -1,6 +1,6 @@
 library(tidyverse)
 
-client <- rsicar::sicar_client(rsicar::sicar_solver_manual())
+client <- rsicar::sicar_client(rsicar::sicar_solver_tesseract())
 
 rsicar::sicar_release_dates(client)
 
@@ -8,7 +8,7 @@ rsicar::sicar_states()
 
 rsicar::sicar_polygon_types()
 
-state <- "ES"
+state <- "RN"
 rsicar::sicar_download_state(
   client,
   state,
@@ -16,20 +16,20 @@ rsicar::sicar_download_state(
   dest_dir = paste0("~/Downloads/RSICAR/", state)
 )
 
-rsicar::sicar_read_manifest("~/Downloads/RSICAR/ES")
+rsicar::sicar_read_manifest(paste0("~/Downloads/RSICAR/", state))
 
-rsicar::sicar_download_status("~/Downloads/RSICAR/ES")
+rsicar::sicar_download_status(paste0("~/Downloads/RSICAR/", state))
 
 mun_cod <-
   rsicar::sicar_resolve_municipality(
-    c("viana/es", "domingos martins", "cariacica", "vitoria")
+    c("natal", "parnamirim/rn")
   )
 
 mun_cod %>%
   as.data.frame()
 
 mun_car <-
-  rsicar::sicar_extract_municipality(mun_cod, "~/Downloads/RSICAR/ES/")
+  rsicar::sicar_extract_municipality(mun_cod, paste0("~/Downloads/RSICAR/", state))
 
 mun_car %>%
   glimpse()
@@ -39,4 +39,4 @@ mun_car %>%
 ## `tema` com o tipoo do arquivo extraído (outputs de rsicar::sicar_polygon_types())
 
 mun_car %>%
-  mapview::mapview(map.types = c("OpenStreetMap", "Esri.WorldImagery"), zcol = "municipio")
+  mapview::mapview(map.types = c("OpenStreetMap", "Esri.WorldImagery"), zcol = "tema")
